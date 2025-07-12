@@ -1,11 +1,13 @@
 import { getPoemFromFirestore } from '@/lib/firestore.js';
 import { notFound } from 'next/navigation';
 import FloatingParticles from '@/components/FloatingParticles.js';
+import BackgroundImage from '@/components/BackgroundImage.js';
 
 // メタデータ生成（OGP対応）
 export async function generateMetadata({ params }) {
   try {
-    const poemData = await getPoemFromFirestore(params.id);
+    const { id } = await params;
+    const poemData = await getPoemFromFirestore(id);
     
     if (!poemData) {
       return {
@@ -48,14 +50,15 @@ export async function generateMetadata({ params }) {
 
 export default async function ViewPoemPage({ params }) {
   try {
-    const poemData = await getPoemFromFirestore(params.id);
+    const { id } = await params;
+    const poemData = await getPoemFromFirestore(id);
     
     if (!poemData) {
       notFound();
     }
     
     const shareText = `${poemData.phrase}\n\n#ゆるVibePages`;
-    const shareUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/view/${params.id}`;
+    const shareUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/view/${id}`;
     const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
     
     return (
@@ -64,14 +67,7 @@ export default async function ViewPoemPage({ params }) {
         <FloatingParticles />
         
         {/* 背景画像 */}
-        {poemData.imageUrl && (
-          <div 
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: `url(${poemData.imageUrl})` }}
-          >
-            <div className="absolute inset-0 bg-black bg-opacity-30"></div>
-          </div>
-        )}
+        <BackgroundImage imageUrl={poemData.imageUrl} theme={poemData.theme} />
         
         {/* コンテンツ */}
         <div className="relative z-20 min-h-screen flex items-center justify-center p-8">

@@ -19,7 +19,7 @@ export default function Home() {
     setError(null);
 
     try {
-      const response = await fetch('/api/generate-safe', {
+      const response = await fetch('/api/generate-storage', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

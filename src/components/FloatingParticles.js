@@ -68,9 +68,9 @@ export default function FloatingParticles() {
         
         // グラデーション
         const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
-        gradient.addColorStop(0, 'rgba(255, 192, 203, 0.8)'); // ピンク
-        gradient.addColorStop(0.5, 'rgba(255, 182, 193, 0.4)');
-        gradient.addColorStop(1, 'rgba(255, 255, 255, 0.1)');
+        gradient.addColorStop(0, 'rgba(255, 192, 203, 0.9)'); // ピンク
+        gradient.addColorStop(0.5, 'rgba(255, 182, 193, 0.6)');
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0.3)');
         
         ctx.fillStyle = gradient;
         ctx.beginPath();
@@ -115,8 +115,11 @@ export default function FloatingParticles() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-0"
-      style={{ background: 'transparent' }}
+      className="fixed inset-0 pointer-events-none"
+      style={{ 
+        background: 'transparent',
+        zIndex: 10
+      }}
     />
   );
 }
