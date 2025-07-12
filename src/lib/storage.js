@@ -1,5 +1,5 @@
 // Firebase Storage 画像アップロード関数
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { storage } from './firebase.js';
 
 /**
