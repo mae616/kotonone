@@ -38,6 +38,9 @@ export async function generateImage(prompt) {
     
     // エラーの詳細を確認
     if (error.response?.status === 400) {
+      if (error.code === 'content_policy_violation') {
+        throw new Error('画像プロンプトがコンテンツポリシーに違反しました');
+      }
       throw new Error('画像生成プロンプトに問題があります');
     } else if (error.response?.status === 429) {
       throw new Error('API利用制限に達しました。しばらく待ってから再試行してください');

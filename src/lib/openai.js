@@ -77,16 +77,16 @@ export async function generateImagePrompt(theme, poem) {
           role: "system",
           content: `あなたは画像生成プロンプトの専門家です。日本の詩のテーマから、DALL-E 3用の美しい画像プロンプトを英語で生成してください。
 
-要件:
-- 抽象的で芸術的な表現
-- 水彩画や油絵風のスタイル
+重要な要件:
+- DALL-E 3のコンテンツポリシーを遵守
+- 抽象的で芸術的な表現のみ
+- 自然要素（空、雲、水、光）を中心に
 - 優しく美しい色調
-- 詩の感情に合った雰囲気
 - 16:9のアスペクト比
-- 過度に具体的にせず、感情的な抽象表現を重視
+- 人物や具体的なオブジェクトは避ける
 
-フォーマット例:
-"Watercolor painting, abstract representation of [emotion], soft brushstrokes, [color palette], flowing organic shapes, minimalist composition, peaceful atmosphere, 16:9 aspect ratio"`
+安全なフォーマット例:
+"Abstract watercolor painting, soft [color] tones, gentle flowing shapes, peaceful sky, natural lighting, minimalist composition, serene atmosphere, 16:9 aspect ratio"`
         },
         {
           role: "user",
