@@ -1,5 +1,6 @@
 import { getPoemFromFirestore } from '@/lib/firestore.js';
 import { notFound } from 'next/navigation';
+import FloatingParticles from '@/components/FloatingParticles.js';
 
 // メタデータ生成（OGP対応）
 export async function generateMetadata({ params }) {
@@ -59,6 +60,9 @@ export default async function ViewPoemPage({ params }) {
     
     return (
       <div className="min-h-screen relative overflow-hidden">
+        {/* 浮遊パーティクルアニメーション */}
+        <FloatingParticles />
+        
         {/* 背景画像 */}
         {poemData.imageUrl && (
           <div 
@@ -70,7 +74,7 @@ export default async function ViewPoemPage({ params }) {
         )}
         
         {/* コンテンツ */}
-        <div className="relative z-10 min-h-screen flex items-center justify-center p-8">
+        <div className="relative z-20 min-h-screen flex items-center justify-center p-8">
           <div className="text-center max-w-2xl">
             {/* テーマ */}
             <div className="mb-8">
@@ -92,15 +96,19 @@ export default async function ViewPoemPage({ params }) {
                 href={twitterShareUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full font-medium transition-colors"
+                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8 py-4 rounded-full font-medium transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
               >
+                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M6.29 18.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0020 3.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.073 4.073 0 01.8 7.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 010 16.407a11.616 11.616 0 006.29 1.84"/>
+                </svg>
                 𝕏で共有する
               </a>
               
               <a
                 href="/"
-                className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-full font-medium transition-colors"
+                className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-8 py-4 rounded-full font-medium transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
               >
+                <span className="mr-2">✨</span>
                 新しい詩を作る
               </a>
             </div>
