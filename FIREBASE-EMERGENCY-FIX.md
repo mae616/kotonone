@@ -46,4 +46,4 @@ service firebase.storage {
 → Firebase Storage ルールが正しく設定されていません
 
 ### Case 3: ずっと読み込み中
-→ Firebase Storage URLに問題があります
+→ Firebase Storage URLに問題があります 
