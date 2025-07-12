@@ -118,7 +118,7 @@ export default function FloatingParticles() {
       className="fixed inset-0 pointer-events-none"
       style={{ 
         background: 'transparent',
-        zIndex: 10
+        zIndex: 5
       }}
     />
   );

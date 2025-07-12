@@ -43,7 +43,14 @@ export async function uploadImageToStorage(imageId, imageUrl) {
     
     // ダウンロードURLを取得
     const downloadURL = await getDownloadURL(snapshot.ref);
-    console.log('Firebase Storage URL:', downloadURL);
+    console.log('Firebase Storage URL生成成功:', downloadURL);
+    
+    // URLの形式を確認（デバッグ用）
+    if (downloadURL.includes('firebasestorage.googleapis.com')) {
+      console.log('✅ 標準Firebase Storage URL形式');
+    } else {
+      console.warn('⚠️ 非標準URL形式:', downloadURL);
+    }
     
     return downloadURL;
   } catch (error) {
