@@ -45,3 +45,6 @@ next-env.d.ts
 # doc/99_slide_pdf/*.pdf
 # doc/99_slide_pdf/*.html
 # doc/99_slide_pdf/*.pptx
+
+# Marp configuration (avoid conflicts with command line)
+.marprc
