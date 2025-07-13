@@ -1,3 +1,12 @@
+---
+marp: true
+theme: default
+paginate: true
+backgroundColor: #fefefe
+header: '🌸 ゆるVibe Pages 生成アプリ'
+footer: '要件定義書 - 2025年7月13日'
+---
+
 # 🌸 ゆるVibe Pages 生成アプリ 要件定義書
 
 > *風のように軽やか、心のままに詩を紡ぐアプリケーション*
@@ -11,7 +20,9 @@
 
 各ページはOGP対応し、X（旧Twitter）で簡単に共有できる美しいページを提供する。
 
-### 🎯 目指すもの
+---
+
+## 🎯 目指すもの
 - 心の瞬間を詩に変える体験
 - 美しいアニメーションと詩の調和
 - SNSで共有したくなる魅力的なページ
@@ -27,6 +38,13 @@
 | **アニメーション** | p5.js | 固定背景アニメーション |
 | **AI文章生成** | OpenAI GPT-4o | 詩・句の生成 |
 | **AI画像生成** | OpenAI DALL-E 3 | テーマに応じた背景画像 |
+
+---
+
+## 🛠️ 技術スタック（続き）
+
+| カテゴリ | 技術 | 用途 |
+|---------|------|------|
 | **データベース** | Firebase Firestore | データ永続化 |
 | **画像保存** | Firebase Storage | 生成画像の永続化 |
 | **ホスティング** | Firebase Hosting | SSR対応デプロイ |
@@ -43,7 +61,10 @@
   - 送信ボタン（AI生成トリガー）
   - 美しいUI（Tailwind CSS使用）
 
-#### データフロー
+---
+
+## 📊 データフロー - テーマ入力画面
+
 1. ユーザーがテーマを入力
 2. **並行処理**でOpenAIに詩生成とDALL-E画像生成をリクエスト  
 3. レスポンスされた詩とランダムID（nanoid）を生成
@@ -51,7 +72,10 @@
 5. 詩、画像URL、メタデータをFirestoreに保存
 6. `/view/[id]` へ遷移
 
-#### Firestoreデータ構造
+---
+
+## 💾 Firestoreデータ構造
+
 ```typescript
 interface PoemDocument {
   id: string;           // ユニークID（nanoid）
@@ -63,27 +87,40 @@ interface PoemDocument {
 }
 ```
 
-### 2. 🌙 表示ページ（`/view/[id]`）
-- **機能概要**: 生成された詩と画像を美しく表示する専用ページ
-- **主な要素**:
-  - 詩の美しい表示
-  - DALL-E生成背景画像の表示
-  - 固定p5.jsアニメーション（軽量パーティクル）
-  - SNS共有ボタン
-  - OGP対応metaタグ（生成画像を含む）
+---
 
-#### 実装詳細
+## 🌙 表示ページ（`/view/[id]`）
+
+### 機能概要
+生成された詩と画像を美しく表示する専用ページ
+
+### 主な要素
+- 詩の美しい表示
+- DALL-E生成背景画像の表示  
+- 固定p5.jsアニメーション（軽量パーティクル）
+- SNS共有ボタン
+- OGP対応metaタグ（生成画像を含む）
+
+---
+
+## 🛠️ 実装詳細
+
 - `app/view/[id]/page.tsx` で該当ドキュメントをFirestoreから取得
 - Firebase Storageから画像を読み込み
 - 生成画像をOGP画像として設定
 - p5.jsで**固定の美しいパーティクルアニメーション**（全ページ共通）
 
-### 3. 📱 SNS共有機能
-- **機能概要**: 生成されたページをX（旧Twitter）で簡単共有
-- **実装**:
-  - ページ下部に「𝕏で共有する」ボタン
-  - `https://twitter.com/intent/tweet?text=...&url=...` 形式のURL生成
-  - 投稿文に詩を引用＋ページURLを含める
+---
+
+## 📱 SNS共有機能
+
+### 機能概要
+生成されたページをX（旧Twitter）で簡単共有
+
+### 実装
+- ページ下部に「𝕏で共有する」ボタン
+- `https://twitter.com/intent/tweet?text=...&url=...` 形式のURL生成
+- 投稿文に詩を引用＋ページURLを含める
 
 ---
 
@@ -123,12 +160,25 @@ src/
 │   ├── storage.ts                // Firebase Storage操作
 │   ├── openai.ts                 // OpenAI GPT API呼び出し
 │   └── dalle.ts                  // DALL-E 3 API呼び出し
+```
+
+---
+
+## 📁 コンポーネント構成
+
+```
 └── components/
     ├── ui/
     │   ├── ThemeInput.tsx         // テーマ入力コンポーネント
     │   └── ShareButton.tsx        // SNS共有ボタン
     └── FixedCanvas.tsx            // 固定p5.jsアニメーション
+```
 
+---
+
+## ⚙️ 設定ファイル
+
+```
 // 設定ファイル
 ├── firebase.json                  // Hosting/Firestore設定
 ├── next.config.mjs               // Next.js設定
@@ -157,7 +207,7 @@ src/
   "data": {
     "id": "abc123xyz",
     "phrase": "ざわめきの中で ほんの少し 風が鳴った",
-    "imageUrl": "https://firebasestorage.googleapis.com/v0/b/.../abc123xyz.png"
+    "imageUrl": "https://firebasestorage.googleapis.com/..."
   }
 }
 ```
@@ -167,6 +217,11 @@ src/
 {
   "success": false,
   "error": "OpenAI API呼び出しに失敗しました",
+#### エラー時のResponse
+```json
+{
+  "success": false,
+  "error": "Generation failed",
   "details": {
     "gpt": "success", // or "failed"
     "dalle": "failed" // or "success"
@@ -174,7 +229,10 @@ src/
 }
 ```
 
-### 処理フロー詳細
+---
+
+## 📊 処理フロー詳細
+
 1. **並行処理**: GPT-4oとDALL-E 3を同時呼び出し
 2. **画像プロンプト生成**: テーマから画像生成用プロンプトを自動作成
 3. **Firebase Storage**: 生成画像をアップロード
@@ -188,58 +246,26 @@ src/
 ### DALL-E 3 活用戦略
 詩のテーマに基づいて、美しい背景画像を自動生成し、言葉と視覚の調和を創り出す。
 
-#### 画像プロンプト生成ロジック
-```typescript
-interface ImagePromptConfig {
-  baseStyle: string;      // "watercolor painting", "digital art", "oil painting"
-  mood: string;          // テーマから抽出された感情
-  elements: string[];    // 具体的な視覚要素
-  colorPalette: string;  // 色調指定
-  composition: string;   // 構図指定
-}
-
-// 例：「ざわざわした気分」→ 画像プロンプト
-const generateImagePrompt = (theme: string, poem: string) => {
-  return `Watercolor painting, abstract representation of "${theme}" emotion, 
-  soft brushstrokes, muted earth tones with touches of deep blue, 
-  flowing organic shapes suggesting gentle movement and introspection, 
-  minimalist composition, peaceful atmosphere, 16:9 aspect ratio`;
-}
-```
-
-#### 画像品質管理
+### 画像品質管理
 - **サイズ**: 1792x1024（16:9, OGP最適化）
 - **品質**: HD（high detail）
 - **スタイル**: "natural"（写実的でありながら芸術的）
 - **フィルタリング**: 適切性チェック有効
-
-#### フォールバック戦略
-1. **DALL-E失敗時**: プレースホルダー画像 + 固定アニメーション
-2. **部分失敗**: 詩のみ表示、後から画像再生成オプション
-3. **タイムアウト**: プレースホルダー画像 + 非同期生成
-
-#### 固定アニメーション仕様
-- **スタイル**: 優雅な浮遊パーティクル
-- **色調**: 透明度のある白/薄いピンク
-- **動き**: ゆっくりとした上下浮遊、回転
-- **パフォーマンス**: 軽量（60fps、低CPU使用率）
-- **全ページ共通**: 開発・メンテナンス効率重視
 
 ---
 
 ## ⚠️ 制限事項・注意点
 
 ### 現在の制限
-- 投稿されたページのデータは永続化される（ユーザー削除機能なし）
+- 投稿されたページのデータは永続化される
 - 画像生成にコストがかかる（DALL-E 3利用料金）
 - 生成時間が若干長くなる（並行処理で最適化）
-- Firestoreセキュリティルールは開発用（本番では要強化）
+- Firestoreセキュリティルールは開発用
 
 ### セキュリティ考慮事項
 - APIキーの適切な管理
-- Rate Limiting の実装検討（特にDALL-E API）
+- Rate Limiting の実装検討
 - 画像内容のモデレーション
-- スパム対策の将来的な実装
 - Firebase Storage セキュリティルール設定
 
 ---
@@ -247,24 +273,10 @@ const generateImagePrompt = (theme: string, poem: string) => {
 ## 🚀 将来的な拡張案
 
 ### Phase 2: 機能拡張
-- [ ] 画像スタイル選択機能（水彩、油絵、デジタルアートなど）
-- [ ] Puppeteer等でOGP用カスタム画像生成
-- [ ] 投稿一覧ページ（`/explore`）
-- [ ] テーマ別アニメーション切り替え機能
-
-### Phase 3: 高度な機能  
-- [ ] ユーザー認証機能
-- [ ] お気に入り機能
-- [ ] コメント・いいね機能
-- [ ] 画像保存（Supabase/Cloudflare R2）
-
-### Phase 4: AI強化
-- [ ] 感情分析による画像最適化
-- [ ] 音楽生成連携
-- [ ] 多言語対応
-- [ ] GPT-4 Vision APIによる画像解析・改良
-- [ ] ユーザーフィードバックによる生成品質向上
-- [ ] テーマに応じた動的アニメーション復活
+- 画像スタイル選択機能
+- Puppeteer等でOGP用カスタム画像生成
+- 投稿一覧ページ（`/explore`）
+- テーマ別アニメーション切り替え機能
 
 ---
 
@@ -288,35 +300,32 @@ const generateImagePrompt = (theme: string, poem: string) => {
 
 #### ⏱️ 時間配分
 - **0-40分**: プロジェクト初期設定
-  - Next.js + Firebase セットアップ
-  - 環境変数設定
-  - 基本ディレクトリ構成
-
-- **40-80分**: 核心機能実装
-  - OpenAI API統合（GPT-4o + DALL-E 3）
-  - Firebase Firestore + Storage設定
-  - `/api/generate` エンドポイント実装
-
+- **40-80分**: 核心機能実装  
 - **80-120分**: UI/UX実装・デプロイ
-  - トップページ（テーマ入力）
-  - 表示ページ（詩 + 画像）
-  - 固定p5.jsアニメーション
-  - Firebase Hosting デプロイ
 
-#### 🎯 MVP機能スコープ
-**含むもの**:
-- ✅ テーマ入力 → 詩生成
-- ✅ DALL-E画像生成
-- ✅ 固定美しいアニメーション
-- ✅ 基本OGP対応
-- ✅ X共有機能
+---
 
-**Phase 2に延期**:
-- ❌ 動的OGP（画像URL含む）
-- ❌ エラーハンドリング詳細化
-- ❌ 投稿一覧ページ
-- ❌ 高度なバリデーション
-- ❌ セキュリティ強化
+## 🎯 MVP機能スコープ
+
+### 含むもの ✅
+- テーマ入力 → 詩生成
+- DALL-E画像生成
+- 固定美しいアニメーション
+- 基本OGP対応
+- X共有機能
+
+### Phase 2に延期 ❌
+- 動的OGP（画像URL含む）
+- エラーハンドリング詳細化
+- 投稿一覧ページ
+- 高度なバリデーション
+- セキュリティ強化
+
+---
+
+# ありがとうございました 🌸
+
+*心の瞬間を詩に変える、美しい体験を共に創りましょう*
 
 #### 🛠️ 技術的simplification
 - **認証**: なし（Firebase匿名利用）

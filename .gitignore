@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Marp slides (auto-generated, committed via GitHub Actions)
+# Uncomment if you want to ignore generated slides locally
+# doc/99_slide_pdf/*.pdf
+# doc/99_slide_pdf/*.html
+# doc/99_slide_pdf/*.pptx
