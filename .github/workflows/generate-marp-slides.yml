@@ -1,5 +1,10 @@
 name: Generate Marp Slides
 
+# Required permissions for GitHub Actions to write to repository
+permissions:
+  contents: write
+  pull-requests: write
+
 on:
   push:
     branches: [ main ]
@@ -17,6 +22,9 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
       
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -38,18 +46,13 @@ jobs:
       
     - name: Commit and push generated slides
       if: github.event_name == 'push'
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add doc/99_slide_pdf/
-        if git diff --staged --quiet; then
-          echo "No changes to commit"
-        else
-          git commit -m "🎨 Auto-generate slides from rdd.md [skip ci]"
-          git push
-        fi
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: '🎨 Auto-generate slides from rdd.md [skip ci]'
+        file_pattern: 'doc/99_slide_pdf/*'
+        commit_user_name: 'GitHub Action'
+        commit_user_email: 'action@github.com'
+        skip_dirty_check: false
         
     - name: Upload slides as artifacts
       uses: actions/upload-artifact@v4
