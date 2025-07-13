@@ -56,7 +56,7 @@ flowchart TD
     E --> F[日本語詩生成]
     F --> G[GPT-4o レスポンス完了]
     
-    D --> H[詩テーマ → 英語プロンプト変換]
+    D --> H[詩テーマから英語プロンプト変換]
     H --> I[DALL-E 3 画像生成実行]
     I --> J[1792x1024 高解像度画像生成]
     J --> K[DALL-E 3 URL取得完了]
@@ -330,8 +330,8 @@ flowchart TD
 
 2. **処理フロー**
    ```
-   ユーザー入力 → GPT-4o詩生成 → DALL-E画像生成 → 
-   Firestore保存（画像URLそのまま） → 詩ページ表示
+   ユーザー入力 ▶ GPT-4o詩生成 ▶ DALL-E画像生成 ▶ 
+   Firestore保存（画像URLそのまま） ▶ 詩ページ表示
    ```
 
 3. **Firebase Storage制限回避**

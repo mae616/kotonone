@@ -8,11 +8,12 @@
 ゆるVibe Pagesは、ユーザーの感情テーマから美しい詩と背景画像を生成し、ソーシャル共有可能なページを提供するハッカソンプロジェクトです。2時間という限られた時間で、AI技術と美しいUI/UXを組み合わせた実用的なアプリケーションの開発を目指しました。
 
 ### 実装範囲
-- **フロントエンド**: Next.js 15.3.5 + React 19 + Tailwind CSS v4
-- **バックエンド**: 6つのAPIエンドポイント群
-- **AI統合**: OpenAI GPT-4o（詩生成）+ DALL-E 3（画像生成）
-- **データ管理**: Firebase Firestore + Firebase Storage
-- **デプロイ**: Vercel ホスティング
+- **アプリケーション層**: フロントエンド・バックエンド統合開発
+- **AI統合**: 詩・画像の自動生成機能
+- **データ管理**: 永続化・配信システム
+- **デプロイ・ホスティング**: 本番環境運用
+
+技術スタックの詳細については、[システム概要](../04_uml/system-overview.md) を参照してください。
 
 ### 現在の実装状況：**Phase 3-4レベル達成** 🚀
 
@@ -67,22 +68,28 @@
 ### システムコンテキスト図
 
 ```mermaid
-C4Context
-    title システムコンテキスト図 - ゆるVibe Pages
-
-    Person(user, "ユーザー", "詩を求める人")
-    System(app, "ゆるVibe Pages", "詩生成・共有アプリ")
+graph TB
+    User[👤 ユーザー<br/>詩を求める人] 
+    App[🌸 ゆるVibe Pages<br/>詩生成・共有アプリ]
     
-    System_Ext(openai, "OpenAI API", "GPT-4o + DALL-E 3")
-    System_Ext(firebase, "Firebase", "Firestore + Storage")
-    System_Ext(vercel, "Vercel", "ホスティング")
-    System_Ext(sns, "SNS", "Twitter/X")
+    OpenAI[🤖 OpenAI API<br/>GPT-4o + DALL-E 3]
+    Firebase[☁️ Firebase<br/>Firestore + Storage]
+    Vercel[🚀 Vercel<br/>ホスティング]
+    SNS[📱 SNS<br/>Twitter/X]
 
-    Rel(user, app, "テーマ入力", "HTTPS")
-    Rel(app, openai, "AI生成", "API")
-    Rel(app, firebase, "データ保存", "SDK")
-    Rel(vercel, app, "ホスティング", "CDN")
-    Rel(user, sns, "詩共有", "URL")
+    User -->|テーマ入力<br/>HTTPS| App
+    App -->|AI生成<br/>API| OpenAI
+    App -->|データ保存<br/>SDK| Firebase
+    Vercel -->|ホスティング<br/>CDN| App
+    User -->|詩共有<br/>URL| SNS
+    
+    classDef userClass fill:#ffebee,stroke:#e57373,stroke-width:2px
+    classDef appClass fill:#e8f5e8,stroke:#81c784,stroke-width:2px
+    classDef extClass fill:#e3f2fd,stroke:#64b5f6,stroke-width:2px
+    
+    class User userClass
+    class App appClass
+    class OpenAI,Firebase,Vercel,SNS extClass
 ```
 
 ### API設計アーキテクチャ
@@ -134,13 +141,13 @@ sequenceDiagram
     participant DB as Firestore
     participant VIEW as 詩表示ページ
 
-    Note over U,VIEW: 🎯 メインフロー: 詩生成から表示まで
+    Note over U,VIEW: メインフロー: 詩生成から表示まで
 
     U->>UI: 1. テーマ入力「ざわざわ」
-    Note over UI: バリデーション<br/>• 空文字チェック<br/>• 長さ制限
+    Note over UI: バリデーション<br/>空文字チェック・長さ制限
     
     UI->>API: 2. POST /api/generate-storage
-    Note over API: 🔍 並列処理開始<br/>Promise.allSettled使用
+    Note over API: 並列処理開始<br/>Promise.allSettled使用
 
     par 並列AI処理
         API->>GPT: 3a. 詩生成リクエスト
@@ -152,16 +159,16 @@ sequenceDiagram
         DALLE-->>API: 3b'. 画像URL
     end
 
-    Note over API: 🚨 エラーチェック<br/>いずれか失敗 → 即座エラー返却
+    Note over API: エラーチェック<br/>いずれか失敗で即座エラー返却
 
     API->>STOR: 4. 画像アップロード
     Note over STOR: Blob変換<br/>メタデータ付与<br/>タイムアウト: 30秒
     
     alt Storage成功
         STOR-->>API: 4a. Storage URL
-        Note over API: ✅ Storage URL使用
+        Note over API: Storage URL使用
     else Storage失敗
-        Note over API: 🔄 フォールバック<br/>DALL-E URL使用
+        Note over API: フォールバック<br/>DALL-E URL使用
     end
 
     API->>DB: 5. Firestoreデータ保存
@@ -169,7 +176,7 @@ sequenceDiagram
     DB-->>API: 5'. 保存完了
 
     API-->>UI: 6. レスポンス返却
-    Note over API: タイミング情報付き<br/>• total: 8750ms<br/>• gpt: 3200ms<br/>• dalle: 4500ms
+    Note over API: タイミング情報付き<br/>total: 8750ms<br/>gpt: 3200ms<br/>dalle: 4500ms
 
     UI->>VIEW: 7. /view/[id] 遷移
     Note over VIEW: 動的OGP生成
@@ -187,51 +194,21 @@ sequenceDiagram
         VIEW->>STOR: 9b. getDownloadURL()
         STOR-->>VIEW: 9b'. 直接URL
     else 完全失敗
-        Note over VIEW: 🚨 緊急フォールバック<br/>プレースホルダー画像
+        Note over VIEW: 緊急フォールバック<br/>プレースホルダー画像
     end
 
     VIEW-->>U: 10. 詩ページ表示
-    Note over VIEW: • 背景画像<br/>• 浮遊パーティクル<br/>• SNS共有ボタン
+    Note over VIEW: 背景画像・浮遊パーティクル・SNS共有ボタン
 ```
 
 ### データフロー設計
 
-#### Storage CORS問題の解決戦略
+#### 技術的課題と解決
+- **Firebase CORS制限**: SDK getBlob() 方式による回避
+- **並列AI処理**: GPT-4o・DALL-E の同時実行
+- **多段階フォールバック**: 障害時の段階的回復
 
-**問題**: Firebase Storage のCORS制限により、ブラウザから直接画像読み込み不可
-
-**解決策**: **Firebase SDK getBlob() 方式** + **多段階フォールバック**
-
-```mermaid
-graph TD
-    A[画像読み込み要求] --> B{Firebase SDK利用可能？}
-    B -->|Yes| C[getBlob() 実行]
-    B -->|No| D[getDownloadURL() 実行]
-    
-    C --> E{Blob取得成功？}
-    E -->|Success| F[Object URL作成]
-    E -->|Failed| G[getDownloadURL() フォールバック]
-    
-    G --> H{URL取得成功？}
-    H -->|Success| I[直接URL使用]
-    H -->|Failed| J[緊急フォールバック画像]
-    
-    D --> H
-    
-    F --> K[画像表示成功]
-    I --> K
-    J --> L[プレースホルダー表示]
-    
-    style F fill:#90EE90
-    style K fill:#90EE90
-    style J fill:#FFB6C1
-    style L fill:#FFB6C1
-```
-
-**技術的決定の背景**:
-- **getBlob()**: Firebase SDK内部でCORS回避、Blobオブジェクト取得
-- **Object URL**: メモリ上でURL生成、CORS制約なし
-- **メモリ管理**: コンポーネントアンマウント時の自動クリーンアップ
+詳細な実装フロー、技術的決定の背景については、[データフロー分析](data-flow-analysis.md) を参照してください。
 
 ### アニメーション設計
 
@@ -451,7 +428,7 @@ const [gptResult, dalleResult] = await Promise.allSettled([
   generateImage(theme)
 ]);
 
-// 処理時間: 順次実行12-15秒 → 並列実行7-10秒
+// 処理時間: 順次実行12-15秒から並列実行7-10秒へ短縮
 ```
 
 **メモリ管理**:

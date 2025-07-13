@@ -76,18 +76,11 @@ footer: '要件定義書 - 2025年7月13日'
 
 ---
 
-## 💾 Firestoreデータ構造
+## 💾 データ構造
 
-```typescript
-interface PoemDocument {
-  id: string;           // ユニークID（nanoid）
-  theme: string;        // 入力されたテーマ
-  phrase: string;       // 生成された詩・句
-  imageUrl?: string;    // Firebase Storage画像URL
-  imagePrompt?: string; // DALL-E用プロンプト
-  createdAt: Timestamp; // 作成日時
-}
-```
+詩・画像・メタデータをFirestoreに保存します。
+
+詳細なデータモデル、Firestoreスキーマ、TypeScriptインターフェースについては、[API設計書](../05_api_design/api-specification.md#データモデル) を参照してください。
 
 ---
 
@@ -194,46 +187,14 @@ src/
 
 ---
 
-## 🔌 API仕様
+## 🔌 API概要
 
-### POST `/api/generate`
-詩・句と背景画像を並行生成してFirestoreに保存するAPI
+### メインAPI
+- **POST `/api/generate-storage`**: 詩と画像生成（Firebase Storage使用）
+- **POST `/api/generate-safe`**: セーフフォールバック版
+- **POST `/api/generate-dummy`**: 開発・テスト用ダミー版
 
-#### Request
-```json
-{
-  "theme": "ざわざわした気分"
-}
-```
-
-#### Response
-```json
-{
-  "success": true,
-  "data": {
-    "id": "abc123xyz",
-    "phrase": "ざわめきの中で ほんの少し 風が鳴った",
-    "imageUrl": "https://firebasestorage.googleapis.com/..."
-  }
-}
-```
-
-#### エラーレスポンス
-```json
-{
-  "success": false,
-  "error": "OpenAI API呼び出しに失敗しました",
-#### エラー時のResponse
-```json
-{
-  "success": false,
-  "error": "Generation failed",
-  "details": {
-    "gpt": "success", // or "failed"
-    "dalle": "failed" // or "success"
-  }
-}
-```
+詳細なAPI仕様、リクエスト/レスポンス形式、エラーハンドリングについては、[API設計書](../05_api_design/api-specification.md) を参照してください。
 
 ---
 

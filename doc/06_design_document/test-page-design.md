@@ -65,62 +65,9 @@ flowchart TD
 
 ## デザインシステム
 
-### カラーパレット
+テストページのデザインは、統一されたデザインシステムに基づいています。
 
-```css
-/* 背景 */
---bg-primary: #f9fafb        /* gray-50 */
---bg-card: #ffffff           /* 白背景 */
-
-/* テキスト */
---text-primary: #1f2937      /* gray-800 */
---text-secondary: #4b5563    /* gray-600 */
---text-label: #374151        /* gray-700 */
---text-mono: monospace       /* ID表示用 */
-
-/* フォーム要素 */
---input-border: #d1d5db      /* gray-300 */
---input-focus: #ec4899       /* pink-500 */
---input-bg: #ffffff
-
-/* アクションボタン */
---btn-primary: #ec4899       /* pink-500 */
---btn-primary-hover: #db2777 /* pink-600 */
---btn-secondary: #3b82f6     /* blue-500 */
---btn-secondary-hover: #2563eb /* blue-600 */
---btn-disabled: #d1d5db      /* gray-300 */
-
-/* ステータス */
---success-bg: #ffffff        /* 結果表示背景 */
---error-bg: #fef2f2          /* red-50 */
---error-border: #fecaca      /* red-200 */
---error-text: #991b1b        /* red-800 */
-```
-
-### レイアウト構造
-
-```css
-/* コンテナ */
-.test-container {
-  min-height: 100vh;
-  background: #f9fafb;
-  padding: 2rem;
-}
-
-.test-content {
-  max-width: 42rem;  /* max-w-2xl */
-  margin: 0 auto;
-}
-
-/* カードコンポーネント */
-.test-card {
-  background: #ffffff;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-```
+詳細なカラーパレット、タイポグラフィ、コンポーネントスタイルについては、[デザインシステム](design-system.md) を参照してください。
 
 ## UIコンポーネント仕様
 
