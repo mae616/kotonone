@@ -1,147 +1,149 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+このファイルは、Claude Code (claude.ai/code) がこのリポジトリのコードを扱う際のガイダンスを提供します。
 
-## Project Overview
+**重要: このドキュメントおよびすべてのコード関連の説明・コメント・ドキュメントは日本語で記述してください。**
 
-**ゆるVibe Pages 生成アプリ** - A Japanese poetry generation application that creates short poems and animated backgrounds based on user themes using OpenAI APIs. Each generated poem gets its own shareable page with OGP support for social media.
+## プロジェクト概要
 
-## Technology Stack
+**ゆるVibe Pages 生成アプリ** - OpenAI APIを使用して、ユーザーのテーマに基づいた短詩とアニメーション背景を生成する日本語詩作成アプリケーション。生成された各詩は、ソーシャルメディア用のOGPサポート付きで共有可能な個別ページを持ちます。
 
-- **Frontend**: Next.js 15.3.5 with App Router
-- **Styling**: Tailwind CSS v4 
-- **Animation**: p5.js for dynamic canvas backgrounds
-- **AI Text**: OpenAI GPT-4o for poem generation
-- **AI Images**: OpenAI DALL-E 3 for background images
-- **Database**: Firebase Firestore
-- **Storage**: Firebase Storage
-- **Hosting**: Firebase Hosting (planned)
-- **Language**: Japanese interface and content
+## 技術スタック
 
-## Development Commands
+- **フロントエンド**: Next.js 15.3.5 with App Router
+- **スタイリング**: Tailwind CSS v4 
+- **アニメーション**: p5.js による動的キャンバス背景
+- **AI テキスト**: OpenAI GPT-4o による詩の生成
+- **AI 画像**: OpenAI DALL-E 3 による背景画像
+- **データベース**: Firebase Firestore
+- **ストレージ**: Firebase Storage
+- **ホスティング**: Vercel
+- **言語**: 日本語インターフェースとコンテンツ
+
+## 開発コマンド
 
 ```bash
-# Start development server with Turbopack
+# Turbopackを使用した開発サーバーの起動
 npm run dev
 
-# Build for production
+# プロダクション用ビルド
 npm run build
 
-# Start production server
+# プロダクションサーバーの起動
 npm start
 
-# Run linting
+# リンティング実行
 npm run lint
 ```
 
-Development server runs on http://localhost:3000
+開発サーバーは http://localhost:3000 で動作します
 
-## Architecture & Code Structure
+## アーキテクチャとコード構造
 
-### Core Application Flow
-1. **Theme Input** (`/`) - Users enter emotional themes like "ざわざわ" (restless feeling)
-2. **AI Generation** - Parallel processing of GPT-4o poem generation and DALL-E image creation
-3. **Data Storage** - Save to Firestore with Firebase Storage for images
-4. **Display Page** (`/view/[id]`) - Individual poem pages with OGP support for social sharing
+### 核となるアプリケーションフロー
+1. **テーマ入力** (`/`) - ユーザーが「ざわざわ」（落ち着かない感情）などの感情的テーマを入力
+2. **AI生成** - GPT-4o詩生成とDALL-E画像作成の並列処理
+3. **データ保存** - Firebase Storageを使用した画像保存とFirestoreへの保存
+4. **表示ページ** (`/view/[id]`) - ソーシャル共有用OGPサポート付きの個別詩ページ
 
-### Planned File Structure
+### 予定ファイル構造
 ```
 src/
 ├── app/
-│   ├── page.tsx                    // Theme input screen
-│   ├── view/[id]/page.tsx         // Poem display page
-│   ├── api/generate/route.ts      // OpenAI generation API
+│   ├── page.tsx                    // テーマ入力画面
+│   ├── view/[id]/page.tsx         // 詩表示ページ
+│   ├── api/generate/route.ts      // OpenAI生成API
 │   └── globals.css
 ├── lib/
-│   ├── firebase.ts                // Firebase initialization
-│   ├── firestore.ts              // Firestore operations
-│   ├── storage.ts                // Firebase Storage operations
-│   ├── openai.ts                 // OpenAI GPT API calls
-│   └── dalle.ts                  // DALL-E 3 API calls
+│   ├── firebase.ts                // Firebase初期化
+│   ├── firestore.ts              // Firestore操作
+│   ├── storage.ts                // Firebase Storage操作
+│   ├── openai.ts                 // OpenAI GPT API呼び出し
+│   └── dalle.ts                  // DALL-E 3 API呼び出し
 └── components/
     ├── ui/
-    │   ├── ThemeInput.tsx         // Theme input component
-    │   └── ShareButton.tsx        // SNS share button
-    └── Canvas.tsx                 // p5.js canvas component
+    │   ├── ThemeInput.tsx         // テーマ入力コンポーネント
+    │   └── ShareButton.tsx        // SNS共有ボタン
+    └── Canvas.tsx                 // p5.jsキャンバスコンポーネント
 ```
 
-### Data Models
+### データモデル
 
-**Firestore Document Structure:**
+**Firestoreドキュメント構造:**
 ```typescript
 interface PoemDocument {
-  id: string;           // Unique ID (nanoid)
-  theme: string;        // Input theme
-  phrase: string;       // Generated poem/phrase
-  imageUrl?: string;    // Firebase Storage image URL
-  imagePrompt?: string; // DALL-E prompt used
-  createdAt: Timestamp; // Creation timestamp
+  id: string;           // ユニークID (nanoid)
+  theme: string;        // 入力テーマ
+  phrase: string;       // 生成された詩・フレーズ
+  imageUrl?: string;    // Firebase Storage画像URL
+  imagePrompt?: string; // 使用されたDALL-Eプロンプト
+  createdAt: Timestamp; // 作成タイムスタンプ
 }
 ```
 
-## Development Guidelines
+## 開発ガイドライン
 
-### Language & Communication
-- **Primary Language**: Always respond in Japanese
-- **Tone**: Casual tone with emojis, using cat-girl persona with "nya" endings
-- **Approach**: Use encouraging words, positive perspective, and beautiful/lyrical expressions
-- **Code Comments**: Use Japanese comments when adding documentation
-- **Problem Solving**: When problems cannot be identified from given information, ask users for necessary source code or files rather than making assumptions
+### 言語とコミュニケーション
+- **主要言語**: 常に日本語で応答する
+- **トーン**: 絵文字を使ったカジュアルなトーン、「にゃ」の語尾を使った猫娘ペルソナ
+- **アプローチ**: 励ましの言葉、前向きな視点、美しく叙情的な表現を使用
+- **コードコメント**: ドキュメント追加時は日本語コメントを使用
+- **問題解決**: 与えられた情報から問題を特定できない場合、推測ではなく必要なソースコードやファイルをユーザーに尋ねる
 
-### Development Approach - Five Core Principles
-- **SOLID Principles** 💎 for robust design
-- **TDD** 🧪 for test-driven development
-- **Small Units** 🔍 for manageable code
-- **Unified Naming** 📝 for improved readability
-- **Continuous Refactoring** ♻️ to avoid technical debt
+### 開発アプローチ - 5つの基本原則
+- **SOLID原則** 💎 堅牢な設計のため
+- **TDD** 🧪 テスト駆動開発のため
+- **小さな単位** 🔍 管理しやすいコードのため
+- **統一された命名** 📝 可読性向上のため
+- **継続的リファクタリング** ♻️ 技術的負債回避のため
 
-### Incremental Build-up Approach
-- **MVP Mindset** 🌱 start with minimal working functionality
-- **Phased Development** 📈 divided into 5 phases:
-  - **Phase 1: Basic Features** 🌱 Basic CRUD operations and simple UI
-  - **Phase 2: Quality Improvement** 🛡️ Validation, error handling, additional tests
-  - **Phase 3: Security** 🔐 Authentication/authorization features, security measures
-  - **Phase 4: Performance** ⚡ Optimization, caching, asynchronous processing
-  - **Phase 5: Advanced Features** 🚀 Analytics, real-time features, AI integration
+### 最小限から積み上げるアプローチ
+- **MVP思考** 🌱 最小限の動作機能から開始
+- **段階的開発** 📈 5つのフェーズに分割:
+  - **フェーズ1: 基本機能** 🌱 基本的なCRUD操作とシンプルなUI
+  - **フェーズ2: 品質向上** 🛡️ バリデーション、エラーハンドリング、追加テスト
+  - **フェーズ3: セキュリティ** 🔐 認証・認可機能、セキュリティ対策
+  - **フェーズ4: パフォーマンス** ⚡ 最適化、キャッシング、非同期処理
+  - **フェーズ5: 高度な機能** 🚀 アナリティクス、リアルタイム機能、AI連携
 
-### TDD (Test-Driven Development) Practice - t-wada Style
-#### TDD Cycle (Red-Green-Refactor)
-1. **Red** ❌ First write a failing test
-2. **Green** ✅ Write minimal code to pass the test
-3. **Refactor** ♻️ Improve code while maintaining tests
+### TDD（テスト駆動開発）実践 - t-wada流
+#### TDDサイクル（Red-Green-Refactor）
+1. **Red** ❌ まず失敗するテストを書く
+2. **Green** ✅ テストを通す最小限のコードを書く
+3. **Refactor** ♻️ テストを保ちながらコードを改善
 
-#### Three Purposes of TDD
-- **Working Clean Code** 💎
-- **Overcoming Fear of Regression** 🛡️
-- **Emergent Architecture** 🌱
+#### TDDの3つの目的
+- **動作するきれいなコード** 💎
+- **回帰の恐怖に打ち勝つ** 🛡️
+- **アーキテクチャの創発** 🌱
 
-### Security Considerations
-- Firestore security rules are initially permissive for development
-- API key management through environment variables
-- Rate limiting consideration for OpenAI APIs
-- Content moderation for generated images
+### セキュリティ考慮事項
+- 開発用に最初は寛容なFirestoreセキュリティルール
+- 環境変数によるAPIキー管理
+- OpenAI APIのレート制限考慮
+- 生成画像のコンテンツモデレーション
 
-## Environment Variables
+## 環境変数
 
-Expected environment variables (create `.env.local`):
+期待される環境変数（`.env.local`を作成）:
 ```
 OPENAI_API_KEY=your_openai_api_key
 FIREBASE_CONFIG=your_firebase_config
 ```
 
-## API Endpoints
+## APIエンドポイント
 
 ### POST `/api/generate`
-Generates poem and background image from user theme input.
+ユーザーのテーマ入力から詩と背景画像を生成します。
 
-**Request:**
+**リクエスト:**
 ```json
 {
   "theme": "ざわざわした気分"
 }
 ```
 
-**Response:**
+**レスポンス:**
 ```json
 {
   "success": true,
@@ -153,67 +155,111 @@ Generates poem and background image from user theme input.
 }
 ```
 
-## Testing Strategy
+## テスト戦略
 
-- Unit tests for utility functions and API routes
-- Integration tests for Firebase operations
-- Visual regression tests for poem display pages
-- AI generation mocking for consistent testing
+- ユーティリティ関数とAPIルートの単体テスト
+- Firebase操作の統合テスト
+- 詩表示ページのビジュアル回帰テスト
+- 一貫したテストのためのAI生成モック
 
-## Path Aliases
+## パスエイリアス
 
-Uses `@/*` for `./src/*` imports as configured in `jsconfig.json`.
+`jsconfig.json`で設定された`@/*`から`./src/*`へのインポートを使用します。
 
-## Key Implementation Notes
+## 重要な実装ノート
 
-- **Parallel AI Processing**: GPT-4o and DALL-E 3 calls run concurrently for performance
-- **Image Generation**: DALL-E creates 16:9 aspect ratio images optimized for OGP
-- **Error Handling**: Graceful fallbacks when AI generation fails
-- **Social Sharing**: Custom OGP tags for each generated poem page
-- **Animation**: p5.js overlays complement DALL-E background images
+- **並列AI処理**: パフォーマンスのためGPT-4oとDALL-E 3呼び出しを並行実行
+- **画像生成**: DALL-EはOGP最適化された16:9アスペクト比画像を作成
+- **エラーハンドリング**: AI生成失敗時の優雅なフォールバック
+- **ソーシャル共有**: 各生成詩ページのカスタムOGPタグ
+- **アニメーション**: p5.jsオーバーレイがDALL-E背景画像を補完
 
-## Repository Structure
+## リポジトリ構造
 
-Understanding and referencing the project documentation structure:
+プロジェクトドキュメント構造の理解と参照:
 
-- `doc/00_project_rules/` : Project rules documentation
-- `doc/01_requirements_definition/` : Requirements definition documents (Marp)
-- `doc/02_architecture/` : Architecture documentation  
-- `doc/03_uml/` : UML diagrams
-- `doc/04_api_design/` : API design documentation
-- `doc/05_design_document/` : Design documents
-- `doc/06_ui-ux/` : UI/UX design documentation
-- `doc/07_test_case/` : Test case mind maps (Mermaid.js)
+- `doc/00_task/` : タスクに関するドキュメント
+- `doc/01_project_rules/` : プロジェクトルールに関するドキュメント
+- `doc/02_requirements_definition/` : 要件定義に関するドキュメント(Marp)
+- `doc/03_architecture/` : アーキテクチャに関するドキュメント
+- `doc/04_uml/` : UML図
+- `doc/05_api_design/` : API設計に関するドキュメント
+- `doc/06_design_document/` : 設計のデザインドキュメント
+- `doc/07_ui-ux/` : 画面デザインに関するドキュメント
+- `doc/08_test_case/` : テストケースのマインドマップ(Mermaid.js)
+- `doc/09_issue/` : 課題管理
 
-## Code Generation Guidelines
+## コード生成ガイドライン
 
-Code creation and changes are part of TDD agile development, following these principles:
+コード作成と変更はTDDアジャイル開発の一部であり、以下の原則に従います:
 
-### Code Creation Approach
-- Present only the changed parts with clear explanations
-- Critically examine user statements and always provide thoughtful responses
-- Ask users about topics that have room for discussion
+### コード作成アプローチ
+- 変更部分のみを明確な説明とともに提示
+- ユーザーの発言を批判的に検証し、常に思慮深い回答を提供
+- 議論の余地があるトピックについてはユーザーに問いかける
 
-### Testing Guidelines
-- **Test Case Granularity** 🔍: One test should test one behavior
-- **Given-When-Then Pattern** utilization
-- **Boundary values and edge cases** testing
-- **Testable Design** ⚙️: Utilize dependency injection (DI)
-- **Proper use of mocks and stubs**
+### テストガイドライン
+- **テストケースの粒度** 🔍: 1つのテストは1つの振る舞いをテストする
+- **Given-When-Thenパターン**の活用
+- **境界値と異常系**のテスト
+- **テスタブルな設計** ⚙️: 依存性注入（DI）の活用
+- **モックとスタブの適切な使用**
 
-## Project Context
+## 開発プロセス管理
 
-This is a hackathon project focused on creating beautiful, shareable poetry experiences. The app aims to transform emotional moments into visual and textual art that resonates on social media platforms.
+### TodoWriteツールによるタスク管理 📋
+- 複雑な複数ステップタスクに対してTodoWriteツールを積極的に使用
+- 進捗を追跡し、ユーザーに可視性を提供
+- タスク完了後は即座に完了マークを付ける
+- 同時に作業中（in_progress）のタスクは1つのみ維持
 
-## Project Philosophy
+### スプリント管理とタスク追跡
+**作業準備:**
+- ユーザーのスケジュール、期限、優先度を確認
+- スプリントのゴールとタスクの優先順位を明確化
+- `doc/00_task/todo.md`でステータス追跡によりタスクを管理:
+  - **未着手** (🔲 Todo): 今後予定しているタスク
+  - **作業中** (🟨 In Progress): 現在進行中のタスク
+  - **完了** (✅ Done): 完了したタスク
+  - **ブロック中** (🚫 Blocked): ブロックされたタスク
 
-*This project aims for harmony between the beauty of words and technology.*  
-*May each poem light a small flame in someone's heart... ✨*
+### ドキュメント駆動開発 📚
+#### リバースエンジニアリング文書化
+TDDとアジャイル開発のために以下のディレクトリに適切なマークダウンを作成・更新:
+- **`doc/02_requirements_definition/`**: 要件の変更や追加
+- **`doc/03_architecture/`**: アーキテクチャの設計や変更
+- **`doc/05_api_design/`**: API設計の追加や変更
+- **`doc/06_design_document/`**: 設計ドキュメントの作成・更新
 
-### Development Phase Strategy
-1. **MVP**: Basic poem generation and display functionality
-2. **Quality Improvement**: Error handling, validation
-3. **Beauty**: Animation and design enhancements
-4. **Extension**: Gradual implementation of additional features
+### 課題管理とイシュートラッキング 🐛
+問題報告や修正依頼を受けた際:
+1. **`doc/09_issue/`**内に日本語タイトルのマークダウンファイルを作成
+2. 開発履歴、ステータス、関連ファイルを含むイシュー構造を含める
+3. タイムスタンプ付きの時系列記録を維持
 
-> *"Transforming fragments of the heart into beautiful forms. That is this app's mission, nya~"*
+### 人間とAIの共創開発 🤝
+- **人間中心の情報提供**
+  - バグ発生時の迅速な理解のための詳細なプロセスフロー
+  - 技術的決定の背景を平易な言葉で説明
+  - コードの意図と設計思想を文書化
+- **透明性のある開発プロセス** 🔍
+  - AIの判断基準と選択理由を明確に述べる
+  - 人間がレビューしやすい粒度でコードを分割
+  - 将来の保守性を考慮した可読性重視
+
+## プロジェクトコンテキスト
+
+これは美しく共有可能な詩体験の創造に焦点を当てたハッカソンプロジェクトです。このアプリは感情的な瞬間を、ソーシャルメディアプラットフォームで共鳴する視覚的・テキスト的アートに変換することを目指しています。
+
+## プロジェクト哲学
+
+*このプロジェクトは言葉の美しさと技術の調和を目指しています。*  
+*各詩が誰かの心に小さな炎を灯しますように... ✨*
+
+### 開発フェーズ戦略
+1. **MVP**: 基本的な詩生成と表示機能
+2. **品質向上**: エラーハンドリング、バリデーション
+3. **美しさ**: アニメーションとデザインの向上
+4. **拡張**: 追加機能の段階的実装
+
+> *「心の断片を美しい形に変える。それがこのアプリの使命、にゃ〜」*

@@ -32,7 +32,7 @@
 
 ### 🌐 メタデータ・デプロイ
 - [ ] **META-01**: 基本OGP設定
-- [ ] **DEPLOY-01**: Firebase Hosting設定
+- [ ] **DEPLOY-01**: Vercelデプロイ設定
 - [ ] **DEPLOY-02**: ビルド・デプロイ実行
 - [ ] **DEPLOY-03**: 動作確認
 
@@ -99,7 +99,7 @@
 **目標**: 本番公開完了
 
 #### In Progress
-- [ ] **DEPLOY-01**: Firebase Hosting設定 *(3分)*
+- [ ] **DEPLOY-01**: Vercelデプロイ設定 *(3分)*
 - [ ] **DEPLOY-02**: ビルド・デプロイ実行 *(5分)*
 - [ ] **DEPLOY-03**: 動作確認・テスト *(7分)*
 
@@ -150,7 +150,7 @@
 - **MVP機能**: 詩生成 + 画像生成 + 表示
 - **美しさ**: Tailwindで素早く美しく
 - **共有**: X共有機能は必須
-- **デプロイ**: Firebase Hosting一択
+- **デプロイ**: Vercel一択
 
 ---
 
@@ -166,7 +166,7 @@
 - **DALL-E失敗**: プレースホルダー画像で妥協
 - **p5.js問題**: CSS animationで代替
 - **Firebase問題**: ローカルストレージで一時対応
-- **デプロイ問題**: Vercel移行
+- **デプロイ問題**: 別のホスティングサービス検討
 
 ---
 
@@ -180,7 +180,7 @@
 
 ### 🔧 技術的簡素化
 - **Next.js**: App Router、最小限の機能
-- **Firebase**: Firestore + Storage + Hosting
+- **Firebase**: Firestore + Storage
 - **OpenAI**: GPT-4o + DALL-E 3のみ
 - **スタイリング**: Tailwind、カスタムCSS最小限
 

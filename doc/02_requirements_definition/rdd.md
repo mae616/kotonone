@@ -47,7 +47,7 @@ footer: '要件定義書 - 2025年7月13日'
 |---------|------|------|
 | **データベース** | Firebase Firestore | データ永続化 |
 | **画像保存** | Firebase Storage | 生成画像の永続化 |
-| **ホスティング** | Firebase Hosting | SSR対応デプロイ |
+| **ホスティング** | Vercel | SSR対応デプロイ |
 | **OGP対応** | Next.js Metadata API | SNS共有最適化 |
 
 ---
