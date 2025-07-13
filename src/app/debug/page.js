@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ref, getDownloadURL, listAll } from 'firebase/storage';
+import { ref, getDownloadURL, listAll, getBlob } from 'firebase/storage';
 import { storage } from '@/lib/firebase.js';
 import { getPoemFromFirestore } from '@/lib/firestore.js';
 
@@ -82,6 +82,56 @@ export default function DebugPage() {
         details: `アプリID: ${storage.app.options.appId}`
       });
       
+      // 1.5. Firebase SDK getBlob() 機能テスト
+      try {
+        debugResults.push({
+          type: 'info',
+          message: '🔥 Firebase SDK getBlob() 機能テスト開始...'
+        });
+        
+        // 実際に存在するファイルでテスト（Firebase Consoleで確認済み）
+        const testImageIds = ['1752308749714', '1752304956761', '1752305274447'];
+        
+        for (const testId of testImageIds) {
+          try {
+            const fileName = `images/${testId}.png`;
+            const testRef = ref(storage, fileName);
+            
+            // getBlob() テスト
+            const blob = await getBlob(testRef);
+            debugResults.push({
+              type: 'success',
+              message: `✅ getBlob() 成功: ${testId}`,
+              details: `サイズ: ${blob.size} bytes, タイプ: ${blob.type}`
+            });
+            
+            // Object URL 作成テスト
+            const objectUrl = URL.createObjectURL(blob);
+            debugResults.push({
+              type: 'success',
+              message: `✅ Object URL 作成成功: ${testId}`,
+              url: objectUrl
+            });
+            
+            // Object URL クリーンアップ（5秒後）
+            setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
+            
+          } catch (blobError) {
+            debugResults.push({
+              type: 'error',
+              message: `❌ getBlob() 失敗: ${testId}`,
+              details: blobError.message
+            });
+          }
+        }
+        
+      } catch (sdkError) {
+        debugResults.push({
+          type: 'error',
+          message: `Firebase SDK テストエラー: ${sdkError.message}`
+        });
+      }
+
       // 2. images/ ディレクトリの一覧を取得
       try {
         const imagesRef = ref(storage, 'images/');

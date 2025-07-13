@@ -66,8 +66,11 @@ export default async function ViewPoemPage({ params }) {
         {/* 浮遊パーティクルアニメーション */}
         <FloatingParticles />
         
-        {/* 背景画像 */}
-        <BackgroundImage imageUrl={poemData.imageUrl} theme={poemData.theme} />
+        {/* 背景画像 - Firebase SDK方式でpoemIdを渡す */}
+        <BackgroundImage 
+          imageUrl={poemData.imageUrl} 
+          poemId={id}
+        />
         
         {/* コンテンツ */}
         <div className="relative z-20 min-h-screen flex items-center justify-center p-8">

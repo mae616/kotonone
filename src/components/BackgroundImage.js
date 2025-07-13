@@ -1,63 +1,129 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { loadPoemImage } from '@/lib/firebase-image.js';
 
-export default function BackgroundImage({ imageUrl, theme }) {
+export default function BackgroundImage({ imageUrl, poemId }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [finalImageUrl, setFinalImageUrl] = useState(null);
+  const [loadMethod, setLoadMethod] = useState('');
+  const [performance, setPerformance] = useState(null);
+  const cleanupRef = useRef(null);
 
+  // Firebase SDK方式での画像読み込み
   useEffect(() => {
+      // poemIdがある場合は新しいSDK方式を使用
+      if (poemId) {
+          console.log("🔥 Firebase SDK方式で画像読み込み開始 (poemId):", poemId);
+          loadImageWithSDK(poemId);
+          return;
+      }
+      
+      // 従来方式（imageUrlを直接使用）
       if (!imageUrl) {
           console.log("⚠️ 背景画像URL未設定");
           setIsLoading(false);
           return;
       }
-
-      console.log("🖼️ Firebase Storage画像読み込み開始:", imageUrl);
+      
+      console.log("🔄 従来方式で画像読み込み:", imageUrl);
+      loadImageWithURL(imageUrl);
+  }, [poemId, imageUrl]);
+  
+  // Firebase SDK方式の読み込み関数
+  const loadImageWithSDK = async (poemId) => {
       setIsLoading(true);
       setLoaded(false);
       setError(false);
-
-      // Firebase Storage画像専用の読み込み方法
-      const img = new Image();
+      setFinalImageUrl(null);
       
-      // Firebase Storage画像はcrossOriginを設定しない（調査結果より）
-      // CORSはfetchで失敗するが、Image オブジェクトでは成功している
-      
-      img.onload = () => {
-          console.log("✅ Firebase Storage画像読み込み成功:", imageUrl);
-          setLoaded(true);
-          setError(false);
-          setIsLoading(false);
-      };
-
-      img.onerror = (event) => {
-          console.error("❌ Firebase Storage画像読み込み失敗:", imageUrl, event);
-          setError(true);
-          setLoaded(false);
-          setIsLoading(false);
-      };
-
-      // Firebase Storage URLを直接設定
-      img.src = imageUrl;
-
-      // タイムアウト設定（15秒に延長）
-      const timeout = setTimeout(() => {
-          if (!loaded && !error) {
-              console.warn("⏰ Firebase Storage画像読み込みタイムアウト:", imageUrl);
-              setError(true);
-              setIsLoading(false);
+      try {
+          console.log('🚀 Firebase SDK loadPoemImage 実行中...');
+          const result = await loadPoemImage(poemId);
+          
+          if (result.success) {
+              // クリーンアップ関数を保存
+              cleanupRef.current = result.cleanup;
+              
+              // Object URL または Download URL を設定
+              const imageUrlToUse = result.objectUrl || result.imageUrl;
+              setFinalImageUrl(imageUrlToUse);
+              setLoadMethod(result.method);
+              setPerformance(result.performance);
+              
+              console.log('✅ Firebase SDK画像読み込み成功:', result.method);
+              console.log('📊 パフォーマンス:', result.performance);
+              
+              // Image オブジェクトで最終確認
+              await validateImageLoad(imageUrlToUse);
+              
+          } else {
+              throw new Error(result.error || 'Firebase SDK読み込み失敗');
           }
-      }, 15000);
-
+          
+      } catch (error) {
+          console.error('❌ Firebase SDK方式失敗:', error.message);
+          setError(true);
+          setIsLoading(false);
+          setLoadMethod('Failed: ' + error.message);
+      }
+  };
+  
+  // 従来のURL方式の読み込み関数
+  const loadImageWithURL = async (imageUrl) => {
+      setIsLoading(true);
+      setLoaded(false);
+      setError(false);
+      setFinalImageUrl(imageUrl);
+      setLoadMethod('Legacy URL method');
+      
+      try {
+          await validateImageLoad(imageUrl);
+      } catch (error) {
+          console.error('❌ URL方式失敗:', error.message);
+          setError(true);
+          setIsLoading(false);
+      }
+  };
+  
+  // Image オブジェクトでの検証
+  const validateImageLoad = (imageUrl) => {
+      return new Promise((resolve, reject) => {
+          const img = new Image();
+          
+          img.onload = () => {
+              console.log('✅ 画像読み込み検証成功:', imageUrl.substring(0, 50) + '...');
+              setLoaded(true);
+              setError(false);
+              setIsLoading(false);
+              resolve();
+          };
+          
+          img.onerror = (event) => {
+              console.error('❌ 画像読み込み検証失敗:', imageUrl, event);
+              reject(new Error('Image validation failed'));
+          };
+          
+          img.src = imageUrl;
+          
+          // タイムアウト設定（12秒）
+          setTimeout(() => {
+              reject(new Error('Image load timeout'));
+          }, 12000);
+      });
+  };
+  
+  // クリーンアップ
+  useEffect(() => {
       return () => {
-          clearTimeout(timeout);
-          // メモリリーク防止
-          img.onload = null;
-          img.onerror = null;
+          if (cleanupRef.current) {
+              cleanupRef.current();
+              cleanupRef.current = null;
+          }
       };
-  }, [imageUrl]);
+  }, []);
 
   // フォールバック背景（確実に表示される）
   const FallbackBackground = ({ showDebug = false }) => (
@@ -81,42 +147,65 @@ export default function BackgroundImage({ imageUrl, theme }) {
           <FallbackBackground showDebug={!loaded && !error} />
 
           {/* 成功時の背景画像（フォールバックの上に重ねる） */}
-          {loaded && (
+          {loaded && finalImageUrl && (
               <div
                   className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 opacity-100 z-1"
-                  style={{ backgroundImage: `url(${imageUrl})` }}
+                  style={{ backgroundImage: `url(${finalImageUrl})` }}
               >
                   <div className="absolute inset-0 bg-black bg-opacity-40"></div>
               </div>
           )}
 
-          {/* エラー時の表示 */}
+          {/* エラー時の表示（詳細情報付き） */}
           {error && (
               <div className="absolute top-4 left-4 bg-red-900/70 text-white p-3 rounded text-sm z-10 max-w-md">
-                  <div className="font-bold">🚨 Firebase Storage画像エラー</div>
+                  <div className="font-bold">🚨 Firebase画像読み込みエラー</div>
                   <div className="text-xs mt-1">
-                      Status: {imageUrl ? "URL取得済み" : "URL未設定"}
+                      Method: {loadMethod}
                   </div>
-                  <div className="text-xs">
-                      Type: {imageUrl?.includes('firebasestorage.googleapis.com') ? 'Firebase Storage' : 'External URL'}
-                  </div>
-                  {imageUrl && (
+                  {poemId && (
+                      <div className="text-xs">
+                          PoemID: {poemId}
+                      </div>
+                  )}
+                  {(imageUrl || finalImageUrl) && (
                       <div className="text-xs mt-1 opacity-75">
-                          URL: {imageUrl.substring(0, 60)}...
+                          URL: {(finalImageUrl || imageUrl).substring(0, 50)}...
+                      </div>
+                  )}
+                  {performance && (
+                      <div className="text-xs mt-1 opacity-75">
+                          Load time: {performance.loadTime}ms
                       </div>
                   )}
               </div>
           )}
 
-          {/* ロード中の表示 */}
+          {/* ロード中の表示（方式表示付き） */}
           {isLoading && !loaded && !error && (
               <div className="absolute inset-0 flex items-center justify-center z-10">
                   <div className="text-white bg-black/50 px-4 py-3 rounded-lg">
                       <div className="flex items-center space-x-2">
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          <span>Firebase画像読み込み中...</span>
+                          <div className="flex flex-col">
+                              <span>{poemId ? 'Firebase SDK getBlob()' : 'Firebase URL'} 読み込み中...</span>
+                              {loadMethod && (
+                                  <span className="text-xs opacity-75">{loadMethod}</span>
+                              )}
+                          </div>
                       </div>
                   </div>
+              </div>
+          )}
+          
+          {/* 成功時のパフォーマンス情報（デバッグ用） */}
+          {loaded && performance && process.env.NODE_ENV === 'development' && (
+              <div className="absolute bottom-4 left-4 bg-green-900/70 text-white p-2 rounded text-xs z-10">
+                  <div>✅ {loadMethod}</div>
+                  <div>⏱️ {performance.loadTime}ms</div>
+                  {performance.size && (
+                      <div>📦 {Math.round(performance.size / 1024)}KB</div>
+                  )}
               </div>
           )}
       </>
