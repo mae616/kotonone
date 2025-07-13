@@ -1,0 +1,12 @@
+{
+    "inputDir": "./doc/02_requirements_definition",
+    "output": "./doc/99_slide_pdf",
+    "themeSet": "./marp-themes",
+    "pdf": {
+        "outDir": "./doc/99_slide_pdf"
+    },
+    "html": {
+        "outDir": "./doc/99_slide_pdf"
+    },
+    "engine": "@marp-team/marp-core"
+}
