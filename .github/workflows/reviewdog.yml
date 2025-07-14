@@ -1,0 +1,156 @@
+name: 🐶 Reviewdog - Automated Code Review
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '20.x'
+
+jobs:
+  # ESLint による JavaScript コードレビュー
+  eslint-reviewdog:
+    name: 🔍 ESLint Review (JavaScript)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📥 Install dependencies
+        run: npm ci
+
+      - name: 🐶 Run ESLint with reviewdog
+        uses: reviewdog/action-eslint@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          eslint_flags: 'src/**/*.js'
+          filter_mode: 'diff_context'
+          fail_on_error: false
+          level: 'warning'
+
+  # コード品質チェック（Prettier フォーマット）
+  prettier-reviewdog:
+    name: 🎨 Code Formatting Review
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📥 Install dependencies
+        run: npm ci
+
+      - name: 🎨 Check code formatting
+        run: |
+          # Prettierがインストールされていない場合は警告のみ表示
+          if command -v prettier &> /dev/null; then
+            npx prettier --check 'src/**/*.js' || echo "::warning::コードのフォーマットを確認してください"
+          else
+            echo "::warning::Prettier is not installed. Consider adding it for better code formatting."
+          fi
+
+  # セキュリティチェック with reviewdog
+  security-reviewdog:
+    name: 🛡️ Security Review
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📥 Install dependencies
+        run: npm ci
+
+      - name: 🛡️ Run security audit
+        run: |
+          echo "🔍 セキュリティ監査を実行中..."
+          npm audit --audit-level=moderate --format=json > audit-results.json || true
+          
+          # 脆弱性が見つかった場合の処理
+          if [ -s audit-results.json ] && [ "$(cat audit-results.json)" != "{}" ]; then
+            echo "::warning::セキュリティの脆弱性が検出されました。npm audit fix を実行することを検討してください。"
+          else
+            echo "✅ セキュリティ監査完了 - 重要な脆弱性は検出されませんでした。"
+          fi
+
+  # コードレビュー結果サマリー
+  review-summary:
+    name: 📊 Review Summary
+    runs-on: ubuntu-latest
+    needs: [eslint-reviewdog, prettier-reviewdog, security-reviewdog]
+    if: always()
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: 📊 Generate review summary
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const results = {
+              eslint: '${{ needs.eslint-reviewdog.result }}',
+              prettier: '${{ needs.prettier-reviewdog.result }}',
+              security: '${{ needs.security-reviewdog.result }}'
+            };
+            
+            let summary = '## 🐶 Reviewdog 自動コードレビュー結果\n\n';
+            
+            if (results.eslint === 'success') {
+              summary += '✅ **ESLint**: コード品質チェック完了\n';
+            } else {
+              summary += '⚠️ **ESLint**: コード品質の改善点があります\n';
+            }
+            
+            if (results.prettier === 'success') {
+              summary += '✅ **Prettier**: フォーマットチェック完了\n';
+            } else {
+              summary += '⚠️ **Prettier**: フォーマットの改善点があります\n';
+            }
+            
+            if (results.security === 'success') {
+              summary += '✅ **Security**: セキュリティチェック完了\n';
+            } else {
+              summary += '⚠️ **Security**: セキュリティの確認が必要です\n';
+            }
+            
+            summary += '\n---\n*このコメントは自動生成されました by reviewdog 🐶*';
+            
+            // PRにコメントを投稿
+            if (context.payload.pull_request) {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: summary
+              });
+            }

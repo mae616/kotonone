@@ -347,3 +347,130 @@ TDD実践内容とテスト戦略を `doc/08_test_case/` に体系化：
 - **テスト内容**: テストケースと実装の一致
 - **バージョン情報**: 技術スタック・依存関係の統一
 
+## JavaScript 特化開発指針 📝
+
+### プロジェクト技術仕様
+- **言語**: JavaScript (ES2022+) with JSConfig
+- **フレームワーク**: Next.js 15.3.5 (App Router)
+- **ランタイム**: Node.js 20.x
+- **パッケージマネージャー**: npm
+- **型チェック**: TypeScript (開発時のみ、JSDoc用)
+
+### JavaScript コーディング規約
+#### 基本原則
+- **ES6+ モジュール構文**: import/export を使用
+- **アロー関数**: 可読性を重視した適切な使用
+- **const/let**: varは使用禁止、適切なスコープ管理
+- **テンプレートリテラル**: 文字列連結より優先
+- **分割代入**: オブジェクト・配列の効率的な操作
+
+#### JSDoc 記述規約
+```javascript
+/**
+ * ユーザーのテーマから詩を生成する関数
+ * @param {string} theme - 入力されたテーマ
+ * @param {Object} options - 生成オプション
+ * @param {boolean} options.includeImage - 画像生成の有無
+ * @returns {Promise<{phrase: string, imageUrl?: string}>} 生成された詩と画像URL
+ * @throws {Error} テーマが無効な場合
+ */
+async function generatePoem(theme, options = {}) {
+  // 実装
+}
+```
+
+#### エラーハンドリングパターン
+```javascript
+// 非同期処理のエラーハンドリング
+try {
+  const result = await apiCall();
+  return { success: true, data: result };
+} catch (error) {
+  console.error('API呼び出しエラー:', error);
+  return { success: false, error: error.message };
+}
+```
+
+### コードレビュー自動化 🐶
+
+#### reviewdog 設定
+- **ESLint統合**: プルリクエスト時の自動コード品質チェック
+- **日本語フィードバック**: レビューコメントは日本語で表示
+- **段階的レビュー**: warning → error の段階的フィードバック
+- **フォーマット確認**: Prettier による一貫したコードスタイル
+
+#### 自動化されるチェック項目
+- **JavaScript構文エラー**: ESLint による静的解析
+- **コードスタイル**: 一貫したフォーマットの確認
+- **セキュリティ**: 脆弱性のある記述パターンの検出
+- **パフォーマンス**: 非効率なコードの指摘
+
+## CI/CD ベストプラクティス 🚀
+
+### 2025年JavaScript CI/CD基本原則
+- **JavaScript First**: TypeScript前提ではないJavaScript特化パイプライン
+- **Shift-Left Security**: 開発ライフサイクルの早期段階でセキュリティテストを統合
+- **Build Once, Deploy Everywhere**: 単一ビルドで全環境への展開
+- **Automated Code Review**: reviewdog による自動コードレビュー統合
+- **Principle of Least Privilege**: 最小権限の原則に基づくアクセス制御
+
+### GitHub Actions ワークフロー設計
+#### 基本構造
+- **CI**: プルリクエスト時の自動テスト・ビルド・セキュリティスキャン
+- **CD**: mainブランチマージ時の自動デプロイ
+- **Reviewdog**: プルリクエスト時の自動コードレビュー
+- **Preview**: フィーチャーブランチのプレビュー環境デプロイ
+
+#### JavaScript特化セキュリティ
+- **Secrets管理**: GitHub Secretsでの機密情報管理
+- **環境分離**: production/staging/development環境の適切な分離
+- **依存関係スキャン**: npm audit, Dependabot活用
+- **JavaScript SAST**: ESLint security plugins
+
+### Next.js JavaScript プロジェクト パターン
+#### 推奨ワークフロー
+1. **開発**: フィーチャーブランチでのJavaScript開発
+2. **PR作成**: 自動ESLint・ビルド検証・reviewdog実行
+3. **レビュー**: 人間+自動コードレビュー・セキュリティチェック
+4. **マージ**: 本番デプロイの自動実行
+
+#### JavaScript特化 Scripts
+```json
+{
+  "scripts": {
+    "lint:js": "eslint 'src/**/*.js' --fix",
+    "lint:format": "prettier --write 'src/**/*.js'",
+    "reviewdog:eslint": "eslint 'src/**/*.js' --format checkstyle",
+    "security:js": "eslint 'src/**/*.js' --config .eslintrc.security.js",
+    "test:coverage": "jest --coverage",
+    "ci:lint": "npm run lint",
+    "ci:lint:js": "npm run lint:js"
+  }
+}
+```
+
+### パイプライン品質指標
+- **ビルド成功率**: 95%以上維持
+- **ESLintエラー**: 0個を維持
+- **平均フィードバック時間**: 5-10分以内
+- **reviewdog活用率**: プルリクエストの100%
+- **デプロイ頻度**: 1日複数回
+- **変更失敗率**: 15%未満
+
+### JavaScript セキュリティ統合
+#### 自動化すべきセキュリティチェック
+- **依存関係脆弱性**: npm audit, Snyk
+- **JavaScript コード品質**: ESLint security plugins
+- **シークレットスキャン**: git-secrets, detect-secrets
+- **動的解析**: 本番環境でのセキュリティモニタリング
+
+#### JavaScript コンプライアンス
+- **OWASP Top 10**: JavaScript/Node.js 特化の対策
+- **セキュリティポリシー**: Node.js セキュリティベストプラクティス準拠
+- **アクセス監査**: npm パッケージアクセスの定期レビュー
+
+### 継続的改善
+- **メトリクス収集**: JavaScript特化パイプライン性能追跡
+- **reviewdog改善**: 日本語フィードバックの質向上
+- **フィードバックループ**: 開発チームとの定期的な改善ディスカッション
+

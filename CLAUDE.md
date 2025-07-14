@@ -361,6 +361,127 @@ TDDとアジャイル開発のために以下のディレクトリに適切な�
 - **テスト内容**: テストケースと実装の一致
 - **バージョン情報**: 技術スタック・依存関係の統一
 
+## JavaScript特化 CI/CD 実装ガイドライン 🚀
+
+### 2025年JavaScript CI/CD戦略
+
+#### JavaScript First アプローチ
+- **純粋JavaScript**: TypeScript前提ではないJavaScript特化開発
+- **JSDoc活用**: 型安全性を保ちながらJavaScriptの柔軟性を維持
+- **ES2022+ 標準**: モダンJavaScript機能の積極的活用
+- **reviewdog統合**: 自動コードレビューによる品質向上
+
+#### セキュリティファーストアプローチ
+- **Shift-Left セキュリティ**: 開発初期段階でのセキュリティテスト統合
+- **JavaScript脆弱性スキャン**: Node.js/JavaScript特化のセキュリティ検査
+- **シークレット管理**: GitHub Secretsを活用した機密情報の安全な管理
+- **最小権限原則**: npm パッケージアクセスの適切な制限
+
+#### JavaScript品質保証の自動化
+- **ESLint強化**: JavaScript特化のリンティングルール
+- **reviewdog統合**: プルリクエスト時の自動コードレビュー（日本語対応）
+- **フォーマット統一**: Prettierによる一貫したコードスタイル
+- **依存関係管理**: npm audit・Dependabotによる脆弱性チェック
+
+### GitHub Actions ワークフロー戦略
+
+#### CI（継続的インテグレーション）
+```yaml
+# プルリクエスト時の自動実行
+- Next.js ESLint実行
+- JavaScript特化ESLint実行
+- フォーマットチェック（Prettier）
+- JSDoc型チェック（TypeScript）
+- セキュリティスキャン（JavaScript特化）
+- ビルド検証
+```
+
+#### Reviewdog（自動コードレビュー）
+```yaml
+# プルリクエスト時の自動コードレビュー
+- ESLint による品質チェック
+- フォーマット確認
+- セキュリティ脆弱性チェック
+- 日本語フィードバック提供
+- レビューサマリー生成
+```
+
+#### CD（継続的デプロイメント）
+```yaml
+# mainブランチマージ時の自動実行
+- 最終品質チェック（JavaScript特化）
+- 本番環境ビルド
+- セキュリティ最終チェック
+- Vercel本番デプロイ
+- デプロイ後ヘルスチェック
+```
+
+### Next.js JavaScript + Vercel 最適化パターン
+
+#### 環境戦略
+- **Development**: ローカルJavaScript開発環境
+- **Preview**: プルリクエスト用プレビュー環境（reviewdog統合）
+- **Production**: 本番環境（JavaScript最適化ビルド）
+
+#### JavaScript特化パフォーマンス最適化
+- **Build Once, Deploy Everywhere**: JavaScript特化ビルドアーティファクト
+- **並列実行**: ESLint・テスト・reviewdogの並列実行
+- **キャッシュ戦略**: npm キャッシュの効果的活用
+- **フィードバック時間**: reviewdogによる5分以内の自動フィードバック
+
+### JavaScript セキュリティ・コンプライアンス
+
+#### JavaScript自動セキュリティチェック
+- **依存関係**: npm audit、Dependabot（JavaScript/Node.js特化）
+- **コード分析**: ESLint security plugins、CodeQL
+- **シークレット検出**: JavaScript/Node.js環境での機密情報検出
+- **実行時セキュリティ**: 本番環境でのJavaScriptセキュリティ監視
+
+#### JavaScript品質指標・メトリクス
+- **ビルド成功率**: 95%以上の維持
+- **ESLintエラー**: 0個の維持（reviewdogで即時フィードバック）
+- **reviewdog活用率**: プルリクエストの100%
+- **JavaScript フォーマット準拠率**: 100%
+- **デプロイ頻度**: 1日複数回の安全なリリース
+- **復旧時間**: 障害発生時1時間未満での復旧
+
+### JavaScript特化ツール選定指針
+
+#### 推奨JavaScriptツールスタック
+- **CI/CD**: GitHub Actions（JavaScript・Next.js・Vercel最適化）
+- **コードレビュー**: reviewdog + ESLint（日本語フィードバック）
+- **品質**: ESLint、Prettier、JSDoc + TypeScript
+- **テスト**: Jest（JavaScript）、Playwright（E2E）
+- **セキュリティ**: npm audit、ESLint security、CodeQL
+- **モニタリング**: Vercel Analytics、Sentry
+
+#### JavaScript開発体験の継続的改善
+- **reviewdog最適化**: 日本語フィードバック品質の向上
+- **ESLintルール改善**: プロジェクト特化ルールの継続的調整
+- **パフォーマンス追跡**: JavaScript特化パイプライン性能監視
+- **開発者フィードバック**: JavaScript開発体験向上のための定期的な振り返り
+- **技術アップデート**: JavaScript/Node.js最新プラクティスの評価・導入
+
+### 実装済みワークフロー
+
+#### 現在のCI/CDパイプライン
+- **`.github/workflows/ci.yml`**: JavaScript特化CI（リンティング・セキュリティ・ビルド）
+- **`.github/workflows/cd.yml`**: 本番デプロイメント自動化
+- **`.github/workflows/reviewdog.yml`**: 自動コードレビュー（日本語対応）
+
+#### package.json JavaScript特化スクリプト
+```json
+{
+  "scripts": {
+    "lint:js": "eslint 'src/**/*.js' --fix",
+    "lint:format": "prettier --write 'src/**/*.js'",
+    "reviewdog:eslint": "eslint 'src/**/*.js' --format checkstyle",
+    "security:js": "eslint 'src/**/*.js' --config .eslintrc.security.js",
+    "ci:lint:js": "npm run lint:js"
+  }
+}
+```
+
 ## プロジェクトコンテキスト
 
 これは美しく共有可能な詩体験の創造に焦点を当てたハッカソンプロジェクトです。このアプリは感情的な瞬間を、ソーシャルメディアプラットフォームで共鳴する視覚的・テキスト的アートに変換することを目指しています。
