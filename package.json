@@ -40,7 +40,18 @@
     "marp": "marp doc/02_requirements_definition/rdd.md --pdf -o doc/99_slide_pdf/rdd-slides.pdf",
     "marp:html": "marp doc/02_requirements_definition/rdd.md -o doc/99_slide_pdf/rdd-slides.html",
     "marp:pptx": "marp doc/02_requirements_definition/rdd.md --pptx -o doc/99_slide_pdf/rdd-slides.pptx",
-    "slides": "npm run marp"
+    "slides": "npm run marp",
+    "docs:pdf:task": "mkdir -p doc/99_slide_pdf/task && marp doc/00_task/todo.md --pdf -o doc/99_slide_pdf/task/todo.pdf",
+    "docs:pdf:architecture": "mkdir -p doc/99_slide_pdf/architecture && marp doc/03_architecture/architecture-overview.md --pdf -o doc/99_slide_pdf/architecture/architecture-overview.pdf",
+    "docs:pdf:uml": "mkdir -p doc/99_slide_pdf/uml && marp doc/04_uml/class-diagram.md --pdf -o doc/99_slide_pdf/uml/class-diagram.pdf && marp doc/04_uml/data-flow.md --pdf -o doc/99_slide_pdf/uml/data-flow.pdf && marp doc/04_uml/page-flow-diagram.md --pdf -o doc/99_slide_pdf/uml/page-flow-diagram.pdf && marp doc/04_uml/system-overview.md --pdf -o doc/99_slide_pdf/uml/system-overview.pdf",
+    "docs:pdf:api": "mkdir -p doc/99_slide_pdf/api && marp doc/05_api_design/api-specification.md --pdf -o doc/99_slide_pdf/api/api-specification.pdf",
+    "docs:pdf:design": "mkdir -p doc/99_slide_pdf/design && marp doc/06_design_document/data-flow-analysis.md --pdf -o doc/99_slide_pdf/design/data-flow-analysis.pdf && marp doc/06_design_document/debug-page-design.md --pdf -o doc/99_slide_pdf/design/debug-page-design.pdf && marp doc/06_design_document/design-system.md --pdf -o doc/99_slide_pdf/design/design-system.pdf && marp doc/06_design_document/implementation-status.md --pdf -o doc/99_slide_pdf/design/implementation-status.pdf && marp doc/06_design_document/test-dummy-page-design.md --pdf -o doc/99_slide_pdf/design/test-dummy-page-design.pdf && marp doc/06_design_document/test-page-design.md --pdf -o doc/99_slide_pdf/design/test-page-design.pdf && marp doc/06_design_document/test-sdk-page-design.md --pdf -o doc/99_slide_pdf/design/test-sdk-page-design.pdf && marp doc/06_design_document/test-simple-page-design.md --pdf -o doc/99_slide_pdf/design/test-simple-page-design.pdf",
+    "docs:pdf:test": "mkdir -p doc/99_slide_pdf/test && marp doc/08_test_case/tdd-practice.md --pdf -o doc/99_slide_pdf/test/tdd-practice.pdf",
+    "docs:pdf:all": "npm run docs:pdf:task && npm run docs:pdf:architecture && npm run docs:pdf:uml && npm run docs:pdf:api && npm run docs:pdf:design && npm run docs:pdf:test",
+    "docs:generate:all": "npm run jsdoc:generate && npm run docs:pdf:all && npm run marp",
+    "docs:full": "echo 'ドキュメント生成開始...' && npm run docs:generate:all && echo 'ドキュメント生成完了 📚'",
+    "docs:help": "echo '📚 ドキュメント生成スクリプト' && echo '' && echo '🚀 クイックコマンド:' && echo '  npm run docs:full     # 全ドキュメント一括生成' && echo '  npm run docs:pdf:all  # 全MDをPDF化' && echo '  npm run jsdoc:generate # JSDoc生成' && echo '' && echo '📋 詳細は doc/README-docs-scripts.md を参照'",
+    "docs:clean": "rm -rf doc/99_slide_pdf/*.pdf doc/99_slide_pdf/*/*.pdf docs/jsdoc && echo 'ドキュメント削除完了 🗑️'"
   },
   "dependencies": {
     "firebase": "^11.10.0",
