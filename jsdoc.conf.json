@@ -1,0 +1,26 @@
+{
+  "plugins": [
+    "plugins/markdown"
+  ],
+  "source": {
+    "include": ["./src/"],
+    "includePattern": "\\.(js|jsx)$",
+    "exclude": ["node_modules/"]
+  },
+  "opts": {
+    "destination": "./docs/jsdoc/",
+    "recurse": true
+  },
+  "tags": {
+    "allowUnknownTags": true,
+    "dictionaries": ["jsdoc", "closure"]
+  },
+  "templates": {
+    "cleverLinks": false,
+    "monospaceLinks": false
+  },
+  "metadata": {
+    "title": "ゆるVibe Pages - API ドキュメント",
+    "description": "感情テーマから詩と背景画像を生成するNext.jsアプリケーションのAPIドキュメント"
+  }
+}

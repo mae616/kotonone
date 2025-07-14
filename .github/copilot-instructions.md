@@ -386,10 +386,103 @@ try {
   const result = await apiCall();
   return { success: true, data: result };
 } catch (error) {
-  console.error('API呼び出しエラー:', error);
+  logger.error('API呼び出しエラー', { error: error.message, context: 'apiCall' });
   return { success: false, error: error.message };
 }
 ```
+
+### JSDoc 必須記述ルール 📖
+
+#### 全関数・メソッドのJSDoc必須化
+- **すべての関数**: パブリック・プライベート問わずJSDocコメント必須
+- **パラメータ**: `@param {type} name - description` の詳細記述
+- **戻り値**: `@returns {type} description` の明記
+- **例外**: `@throws {ErrorType} condition` のエラー処理記述
+- **サンプル**: `@example` による実際の使用例
+
+#### React/Next.js コンポーネント JSDoc
+```javascript
+/**
+ * ユーザーの感情テーマから詩を表示するメインコンポーネント
+ * 
+ * @component
+ * @param {Object} props - コンポーネントのプロパティ
+ * @param {string} props.theme - 表示する詩のテーマ
+ * @param {Function} props.onThemeChange - テーマ変更時のコールバック
+ * @param {boolean} [props.showAnimation=true] - アニメーション表示フラグ
+ * @returns {JSX.Element} 詩表示コンポーネント
+ * @example
+ * <PoemDisplay 
+ *   theme="ざわざわした気分" 
+ *   onThemeChange={handleThemeChange}
+ *   showAnimation={true}
+ * />
+ */
+function PoemDisplay({ theme, onThemeChange, showAnimation = true }) {
+  // 実装
+}
+```
+
+#### API関数 JSDoc
+```javascript
+/**
+ * OpenAI APIを使用してテーマから詩を生成
+ * 
+ * @async
+ * @function generatePoem
+ * @param {string} theme - ユーザーが入力した感情テーマ（例：「悲しい」「嬉しい」）
+ * @param {Object} [options={}] - 生成オプション
+ * @param {number} [options.maxLength=100] - 詩の最大文字数
+ * @param {string} [options.style='modern'] - 詩のスタイル
+ * @returns {Promise<string>} 生成された日本語の詩（2-3行）
+ * @throws {Error} OpenAI API呼び出し失敗時
+ * @throws {ValidationError} テーマが空文字または無効な場合
+ * @example
+ * // 基本的な使用例
+ * const poem = await generatePoem("ざわざわした気分");
+ * // "ざわめきの中で ほんの少し 風が鳴った"
+ * 
+ * // オプション付き使用例
+ * const customPoem = await generatePoem("幸せ", { 
+ *   maxLength: 50, 
+ *   style: 'traditional' 
+ * });
+ */
+async function generatePoem(theme, options = {}) {
+  // 実装
+}
+```
+
+#### ユーティリティ関数 JSDoc
+```javascript
+/**
+ * Firebase Storageに画像をアップロードし、公開URLを取得
+ * 
+ * @async
+ * @function uploadImageToStorage
+ * @param {Buffer|Blob} imageData - アップロードする画像データ
+ * @param {string} fileName - 保存時のファイル名（拡張子含む）
+ * @param {Object} [metadata={}] - 画像のメタデータ
+ * @param {string} [metadata.contentType='image/jpeg'] - MIMEタイプ
+ * @returns {Promise<string>} 公開アクセス可能な画像URL
+ * @throws {StorageError} アップロード失敗時
+ * @since 1.0.0
+ * @see {@link https://firebase.google.com/docs/storage} Firebase Storage
+ */
+```
+
+#### JSDoc 品質基準
+- **日本語説明**: 関数・メソッドの説明は日本語で記述
+- **型情報**: TypeScript互換の型記述（`{string}`, `{Promise<Object>}`）
+- **必須項目**: `@param`, `@returns`, `@throws`は必須
+- **推奨項目**: `@example`, `@since`, `@see`を積極的に使用
+- **コンテキスト**: なぜその関数が必要かの背景情報
+
+#### JSDoc 自動生成ルール
+- **コード作成時**: 新しい関数・コンポーネント作成時にJSDocを同時生成
+- **リファクタリング時**: 既存コード修正時にJSDocも更新
+- **型変更時**: パラメータや戻り値の型変更時にJSDoc同期更新
+- **エラー処理追加時**: 新しい例外ケース追加時に`@throws`を更新
 
 ### コードレビュー自動化 🐶
 
@@ -401,9 +494,84 @@ try {
 
 #### 自動化されるチェック項目
 - **JavaScript構文エラー**: ESLint による静的解析
+- **JSDoc品質**: 全関数のJSDocコメント存在確認
+- **ログ使用**: console.log使用検出とlogger推奨
 - **コードスタイル**: 一貫したフォーマットの確認
 - **セキュリティ**: 脆弱性のある記述パターンの検出
 - **パフォーマンス**: 非効率なコードの指摘
+
+### ログレベル管理システム 📊
+
+#### 環境別ログ出力制御
+- **Development**: `DEBUG` レベル - 全ログ出力（デバッグ情報含む）
+- **Staging**: `INFO` レベル - 重要な処理フロー記録
+- **Production**: `ERROR` レベル - エラーのみ記録
+- **Test**: `WARN` レベル - テスト実行時の警告以上
+
+#### logger使用ルール
+```javascript
+import logger from '@/lib/logger.js';
+
+// ❌ 禁止: console.log の直接使用
+console.log('詩生成開始', theme);
+
+// ✅ 推奨: 適切なログレベル使用
+logger.info('詩生成開始', { theme, userId, timestamp: new Date().toISOString() });
+logger.debug('API呼び出しパラメータ', { model: 'gpt-4o', maxTokens: 100 });
+logger.warn('API応答遅延', { duration: '5.2s', endpoint: '/api/generate' });
+logger.error('OpenAI API呼び出し失敗', { 
+  error: error.message, 
+  theme, 
+  retryCount: 2 
+});
+```
+
+#### 構造化ログ記述パターン
+```javascript
+/**
+ * ✅ 良い例: メタデータを含む構造化ログ
+ */
+logger.info('詩生成完了', {
+  theme: userTheme,
+  generatedLength: poem.length,
+  duration: `${Date.now() - startTime}ms`,
+  model: 'gpt-4o',
+  success: true
+});
+
+/**
+ * ❌ 悪い例: 文字列埋め込みのみ
+ */
+logger.info(`詩生成完了: ${userTheme} - ${poem.length}文字`);
+```
+
+#### エラーログのベストプラクティス
+```javascript
+try {
+  const result = await openaiApi.call(params);
+  logger.info('OpenAI API呼び出し成功', { 
+    model: params.model,
+    tokens: result.usage.total_tokens,
+    duration: `${Date.now() - startTime}ms`
+  });
+  return result;
+} catch (error) {
+  logger.error('OpenAI API呼び出し失敗', {
+    error: error.message,
+    statusCode: error.status,
+    model: params.model,
+    retryable: error.code === 'rate_limit',
+    context: 'generatePoem'
+  });
+  throw error;
+}
+```
+
+#### ログ出力禁止項目
+- **個人情報**: ユーザーID以外の個人特定情報
+- **機密情報**: APIキー、パスワード、トークン
+- **大量データ**: 画像データ、長いテキスト全体
+- **循環参照**: オブジェクトの完全なダンプ
 
 ## CI/CD ベストプラクティス 🚀
 

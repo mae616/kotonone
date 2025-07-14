@@ -1,0 +1,205 @@
+/**
+ * 環境別ログレベル管理ユーティリティ
+ * 
+ * 本番環境ではエラーログのみ出力し、開発・ステージング環境では
+ * 適切なレベルのログを出力する構造化ログシステム
+ * 
+ * @module Logger
+ * @author Claude AI
+ * @since 2025-01-14
+ */
+
+/**
+ * ログレベル定数
+ * @readonly
+ * @enum {number}
+ */
+const LOG_LEVELS = {
+  DEBUG: 0,
+  INFO: 1,
+  WARN: 2,
+  ERROR: 3
+};
+
+/**
+ * ログレベル名
+ * @readonly
+ * @type {string[]}
+ */
+const LEVEL_NAMES = ['DEBUG', 'INFO', 'WARN', 'ERROR'];
+
+/**
+ * 環境別デフォルトログレベル設定
+ * @readonly
+ * @type {Object.<string, number>}
+ */
+const ENVIRONMENT_LEVELS = {
+  development: LOG_LEVELS.DEBUG,  // 全ログ出力
+  staging: LOG_LEVELS.INFO,       // デバッグ除く
+  production: LOG_LEVELS.ERROR,   // エラーのみ
+  test: LOG_LEVELS.WARN          // テスト時はワーニング以上
+};
+
+/**
+ * 現在の環境から適切なログレベルを取得
+ * @returns {number} 環境に応じたログレベル
+ */
+function getCurrentLogLevel() {
+  const nodeEnv = process.env.NODE_ENV || 'development';
+  const logLevel = process.env.LOG_LEVEL;
+  
+  // 明示的にLOG_LEVELが設定されている場合
+  if (logLevel && LOG_LEVELS[logLevel.toUpperCase()] !== undefined) {
+    return LOG_LEVELS[logLevel.toUpperCase()];
+  }
+  
+  // 環境別デフォルト
+  return ENVIRONMENT_LEVELS[nodeEnv] || LOG_LEVELS.DEBUG;
+}
+
+/**
+ * ログメッセージをフォーマット
+ * @param {string} level - ログレベル名
+ * @param {string} message - メッセージ
+ * @param {Object} [metadata={}] - 追加のメタデータ
+ * @returns {string} フォーマットされたログメッセージ
+ */
+function formatLogMessage(level, message, metadata = {}) {
+  const timestamp = new Date().toISOString();
+  const env = process.env.NODE_ENV || 'development';
+  
+  // 本番環境では構造化JSON、開発環境では読みやすい形式
+  if (env === 'production') {
+    return JSON.stringify({
+      timestamp,
+      level,
+      message,
+      environment: env,
+      ...metadata
+    });
+  } else {
+    const metaStr = Object.keys(metadata).length > 0 
+      ? ` ${JSON.stringify(metadata)}` 
+      : '';
+    return `[${timestamp}] ${level}: ${message}${metaStr}`;
+  }
+}
+
+/**
+ * ログを出力する内部関数
+ * @param {number} level - ログレベル
+ * @param {string} message - メッセージ
+ * @param {Object} [metadata={}] - 追加のメタデータ
+ * @private
+ */
+function writeLog(level, message, metadata = {}) {
+  const currentLevel = getCurrentLogLevel();
+  
+  // 現在のログレベル以上の場合のみ出力
+  if (level < currentLevel) {
+    return;
+  }
+  
+  const levelName = LEVEL_NAMES[level];
+  const formattedMessage = formatLogMessage(levelName, message, metadata);
+  
+  // エラーレベルは stderr、それ以外は stdout
+  if (level >= LOG_LEVELS.ERROR) {
+    console.error(formattedMessage);
+  } else {
+    console.log(formattedMessage);
+  }
+}
+
+/**
+ * ロガーオブジェクト
+ * 環境に応じて適切なレベルのログを出力する
+ */
+const logger = {
+  /**
+   * デバッグログを出力
+   * 開発環境でのみ表示される詳細な情報
+   * @param {string} message - ログメッセージ
+   * @param {Object} [metadata={}] - 追加のメタデータ
+   * @example
+   * logger.debug('API呼び出し開始', { endpoint: '/api/generate', theme: 'happy' });
+   */
+  debug: (message, metadata = {}) => {
+    writeLog(LOG_LEVELS.DEBUG, message, metadata);
+  },
+
+  /**
+   * 情報ログを出力
+   * 通常の処理フローで重要な情報
+   * @param {string} message - ログメッセージ
+   * @param {Object} [metadata={}] - 追加のメタデータ
+   * @example
+   * logger.info('詩生成完了', { theme: 'sad', duration: '1.2s' });
+   */
+  info: (message, metadata = {}) => {
+    writeLog(LOG_LEVELS.INFO, message, metadata);
+  },
+
+  /**
+   * 警告ログを出力
+   * 注意が必要だが処理継続可能な状況
+   * @param {string} message - ログメッセージ
+   * @param {Object} [metadata={}] - 追加のメタデータ
+   * @example
+   * logger.warn('API レスポンス遅延', { duration: '5.1s', endpoint: '/api/generate' });
+   */
+  warn: (message, metadata = {}) => {
+    writeLog(LOG_LEVELS.WARN, message, metadata);
+  },
+
+  /**
+   * エラーログを出力
+   * 処理失敗やシステムエラー
+   * @param {string} message - ログメッセージ
+   * @param {Object} [metadata={}] - 追加のメタデータ（エラーオブジェクトを含む）
+   * @example
+   * logger.error('OpenAI API呼び出し失敗', { error: error.message, theme: 'happy' });
+   */
+  error: (message, metadata = {}) => {
+    writeLog(LOG_LEVELS.ERROR, message, metadata);
+  },
+
+  /**
+   * 現在のログレベルを取得
+   * @returns {string} 現在のログレベル名
+   */
+  getCurrentLevel: () => {
+    const level = getCurrentLogLevel();
+    return LEVEL_NAMES[level];
+  },
+
+  /**
+   * ログレベルが有効かチェック
+   * @param {string} level - チェックするログレベル名
+   * @returns {boolean} 指定されたレベルが現在出力されるかどうか
+   */
+  isLevelEnabled: (level) => {
+    const levelNum = LOG_LEVELS[level.toUpperCase()];
+    const currentLevel = getCurrentLogLevel();
+    return levelNum !== undefined && levelNum >= currentLevel;
+  }
+};
+
+export default logger;
+
+/**
+ * 便利な名前付きエクスポート
+ */
+export { logger };
+
+/**
+ * 従来のconsole.logからの移行支援関数
+ * @deprecated console.logの代わりにlogger.debug/info/warn/errorを使用してください
+ * @param {...any} args - console.logと同じ引数
+ */
+export function consoleLog(...args) {
+  if (process.env.NODE_ENV === 'development') {
+    logger.warn('console.logの使用を検出しました。logger.debug/info/warn/errorの使用を推奨します。');
+    logger.debug(args.join(' '));
+  }
+}

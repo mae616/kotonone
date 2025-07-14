@@ -90,6 +90,118 @@ interface PoemDocument {
 - **コードコメント**: ドキュメント追加時は日本語コメントを使用
 - **問題解決**: 与えられた情報から問題を特定できない場合、推測ではなく必要なソースコードやファイルをユーザーに尋ねる
 
+### JSDoc 自動生成指針 📖
+
+#### コード作成時のJSDoc必須ルール
+- **関数作成**: 新しい関数・メソッド作成時に**必ずJSDocコメントを同時生成**
+- **コンポーネント作成**: React/Next.jsコンポーネント作成時にprops・戻り値の詳細記述
+- **API関数**: OpenAI・Firebase等の外部API呼び出し関数には詳細なエラー処理記述
+- **ユーティリティ**: ライブラリ関数には使用例（@example）を必須含有
+
+#### JSDoc テンプレート例
+
+**API関数テンプレート**:
+```javascript
+/**
+ * [API名]を使用して[目的]を実行
+ * 
+ * @async
+ * @function [関数名]
+ * @param {string} [param1] - [詳細説明]
+ * @param {Object} [options={}] - [オプション説明]
+ * @returns {Promise<[戻り値型]>} [戻り値の詳細説明]
+ * @throws {Error} [エラーケース1の説明]
+ * @throws {[CustomError]} [エラーケース2の説明]
+ * @example
+ * // [基本的な使用例]
+ * const result = await [関数名]("[パラメータ例]");
+ * 
+ * // [応用例]
+ * const advancedResult = await [関数名]("[パラメータ]", { option: true });
+ * @since 1.0.0
+ */
+```
+
+**React コンポーネントテンプレート**:
+```javascript
+/**
+ * [コンポーネントの目的・機能説明]
+ * 
+ * @component
+ * @param {Object} props - コンポーネントのプロパティ
+ * @param {string} props.[prop1] - [プロパティ1の説明]
+ * @param {Function} props.[prop2] - [コールバック関数の説明]
+ * @param {boolean} [props.[prop3]=true] - [オプショナルプロパティの説明]
+ * @returns {JSX.Element} [レンダリング内容の説明]
+ * @example
+ * <[ComponentName] 
+ *   [prop1]="[例]" 
+ *   [prop2]={[コールバック例]}
+ *   [prop3]={false}
+ * />
+ */
+```
+
+### ログレベル管理システム 🚦
+
+#### 環境別ログ制御の実装
+- **logger.js**: `src/lib/logger.js`を使用した統一ログシステム
+- **console.log禁止**: 全てのconsole.logをlogger.debug/info/warn/errorに置換
+- **構造化ログ**: メタデータオブジェクトによる詳細情報記録
+- **環境変数制御**: `NODE_ENV`と`LOG_LEVEL`による出力レベル制御
+
+#### 環境別ログレベル設定
+```javascript
+// Development環境: すべてのログを出力
+logger.debug('デバッグ情報', { variable: value });
+logger.info('処理開始', { function: 'generatePoem', theme });
+logger.warn('注意事項', { message: 'API応答遅延' });
+logger.error('エラー発生', { error: error.message });
+
+// Staging環境: INFO以上を出力（DEBUGは除外）
+// Production環境: ERROR以上を出力（DEBUG, INFO, WARNは除外）
+```
+
+#### 既存コード改修パターン
+```javascript
+// ❌ Before: console.log使用
+console.log('🌸 詩生成API開始');
+console.log('テーマ:', cleanTheme);
+
+// ✅ After: logger使用
+import logger from '@/lib/logger.js';
+logger.info('詩生成API開始', { endpoint: '/api/generate' });
+logger.debug('処理パラメータ', { theme: cleanTheme, timestamp: new Date().toISOString() });
+```
+
+#### ログメタデータ標準
+```javascript
+// API呼び出しログ
+logger.info('OpenAI API呼び出し開始', {
+  model: 'gpt-4o',
+  theme: userTheme,
+  maxTokens: 150,
+  requestId: generateId()
+});
+
+// 処理完了ログ
+logger.info('詩生成完了', {
+  theme: userTheme,
+  generatedLength: poem.length,
+  duration: `${endTime - startTime}ms`,
+  success: true
+});
+
+// エラーログ
+logger.error('API呼び出し失敗', {
+  error: error.message,
+  statusCode: error.status,
+  retryCount: attempts,
+  context: 'generatePoem',
+  recoverable: error.code === 'rate_limit'
+});
+```
+
 ### 開発アプローチ - 5つの基本原則
 - **SOLID原則** 💎 堅牢な設計のため
 - **TDD** 🧪 テスト駆動開発のため
