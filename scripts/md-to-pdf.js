@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * Markdown to A4 PDF Converter using Puppeteer
- * Marpスライド以外の通常のMarkdownをA4サイズのPDFに変換
+ * Markdown to A4 PDF Converter using Puppeteer with Mermaid Support
+ * Marpスライド以外の通常のMarkdownをA4サイズのPDFに変換（Mermaid図付き）
  */
 
 const fs = require('fs');
@@ -11,7 +11,22 @@ const { marked } = require('marked');
 const puppeteer = require('puppeteer');
 
 /**
- * MarkdownファイルをA4 PDFに変換
+ * Mermaid図を含むMarkdownをHTMLに変換
+ * @param {string} markdownContent - Markdownコンテンツ
+ * @returns {string} HTML文字列
+ */
+function preprocessMermaidInMarkdown(markdownContent) {
+  // Mermaid図を一意のIDを持つHTMLに変換
+  let mermaidCounter = 0;
+  
+  return markdownContent.replace(/```mermaid\n([\s\S]*?)\n```/g, (match, mermaidCode) => {
+    const mermaidId = `mermaid-${++mermaidCounter}`;
+    return `<div class="mermaid" id="${mermaidId}">\n${mermaidCode.trim()}\n</div>`;
+  });
+}
+
+/**
+ * MarkdownファイルをMermaid対応A4 PDFに変換
  * @param {string} inputFile - 入力Markdownファイルパス
  * @param {string} outputFile - 出力PDFファイルパス
  * @param {Object} options - 変換オプション
@@ -23,10 +38,14 @@ async function convertMarkdownToPDF(inputFile, outputFile, options = {}) {
     // Markdownファイルを読み込み
     const markdownContent = fs.readFileSync(inputFile, 'utf8');
     
-    // MarkdownをHTMLに変換
-    const htmlContent = marked(markdownContent);
+    // Mermaid図を前処理
+    const processedMarkdown = preprocessMermaidInMarkdown(markdownContent);
+    console.log(`🔍 Mermaid図の検出: ${(processedMarkdown.match(/class="mermaid"/g) || []).length}個`);
     
-    // A4用のHTMLテンプレート
+    // MarkdownをHTMLに変換
+    const htmlContent = marked(processedMarkdown);
+    
+    // Mermaid対応A4用のHTMLテンプレート
     const htmlTemplate = `
 <!DOCTYPE html>
 <html lang="ja">
@@ -34,6 +53,10 @@ async function convertMarkdownToPDF(inputFile, outputFile, options = {}) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${path.basename(inputFile, '.md')}</title>
+    
+    <!-- Mermaid.js -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', YuGothic, Meiryo, sans-serif;
@@ -130,6 +153,16 @@ async function convertMarkdownToPDF(inputFile, outputFile, options = {}) {
             margin: 1em 0;
         }
         
+        /* Mermaid図のスタイル */
+        .mermaid {
+            text-align: center;
+            margin: 2em 0;
+            padding: 1em;
+            background-color: #fafafa;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+        }
+        
         /* ページ区切り用 */
         .page-break {
             page-break-before: always;
@@ -141,11 +174,63 @@ async function convertMarkdownToPDF(inputFile, outputFile, options = {}) {
                 margin: 0;
                 padding: 20mm;
             }
+            
+            .mermaid {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
         }
     </style>
 </head>
 <body>
     ${htmlContent}
+    
+    <script>
+        console.log('🎨 Mermaid初期化開始');
+        
+        // Mermaid初期化と描画
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            themeCSS: '',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            },
+            sequence: {
+                diagramMarginX: 50,
+                diagramMarginY: 10,
+                actorMargin: 50,
+                width: 150,
+                height: 65,
+                boxMargin: 10,
+                boxTextMargin: 5,
+                noteMargin: 10,
+                messageMargin: 35,
+                mirrorActors: true,
+                bottomMarginAdj: 1,
+                useMaxWidth: true
+            }
+        });
+        
+        // Mermaid図の処理状況をログ出力
+        window.addEventListener('load', () => {
+            console.log('🎨 Mermaid図のレンダリング開始');
+            const mermaidElements = document.querySelectorAll('.mermaid');
+            console.log('検出されたMermaid図の数:', mermaidElements.length);
+            
+            mermaidElements.forEach((element, index) => {
+                console.log(\`Mermaid図 \${index + 1}の内容:\`, element.textContent.trim().substring(0, 50));
+            });
+            
+            mermaid.run().then(() => {
+                console.log('✅ Mermaid図のレンダリング完了');
+            }).catch(error => {
+                console.error('❌ Mermaid図のレンダリングエラー:', error);
+            });
+        });
+    </script>
 </body>
 </html>`;
 
@@ -154,22 +239,66 @@ async function convertMarkdownToPDF(inputFile, outputFile, options = {}) {
     // Puppeteerでブラウザを起動
     const browser = await puppeteer.launch({ 
       headless: 'new',
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      timeout: 60000
     });
     
     const page = await browser.newPage();
     
+    // コンソールログを取得
+    page.on('console', msg => {
+      console.log(`🌐 ブラウザ: ${msg.text()}`);
+    });
+    
+    // エラーを取得
+    page.on('pageerror', error => {
+      console.error(`❌ ページエラー: ${error.message}`);
+    });
+    
+    console.log(`📄 HTMLコンテンツを設定中...`);
+    
     // HTMLコンテンツを設定
     await page.setContent(htmlTemplate, { 
-      waitUntil: 'networkidle0',
-      timeout: 30000 
+      waitUntil: ['networkidle0', 'domcontentloaded'],
+      timeout: 60000 
     });
+    
+    console.log(`✅ HTMLコンテンツ設定完了`);
+    
+    // Mermaid図のレンダリングを待機
+    console.log('🎨 Mermaid図のレンダリング待機中...');
+    
+    // waitForTimeout の代わりに新しい構文を使用
+    await new Promise(resolve => setTimeout(resolve, 5000)); // Mermaid図の描画時間を確保
+    
+    // Mermaid図が完全にレンダリングされるまで待機
+    try {
+      await page.waitForFunction(
+        () => {
+          const mermaidElements = document.querySelectorAll('.mermaid');
+          if (mermaidElements.length === 0) return true; // Mermaid図がない場合は即座に続行
+          
+          // すべてのMermaid図がSVGとしてレンダリングされているかチェック
+          for (const element of mermaidElements) {
+            const svg = element.querySelector('svg');
+            if (!svg || svg.children.length === 0) return false;
+          }
+          return true;
+        },
+        { timeout: 45000 }
+      );
+      console.log('✅ Mermaid図のレンダリング完了');
+    } catch (error) {
+      console.warn('⚠️ Mermaid図のレンダリングタイムアウト（PDF生成は継続）');
+    }
     
     // 出力ディレクトリを作成
     const outputDir = path.dirname(outputFile);
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
+    
+    console.log(`📑 PDF生成中...`);
     
     // A4 PDFとして出力
     await page.pdf({
