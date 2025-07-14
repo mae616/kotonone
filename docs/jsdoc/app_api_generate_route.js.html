@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: app/api/generate/route.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: app/api/generate/route.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * API Route: 詩と画像の並行生成
+ * 
+ * ユーザーのテーマ入力から詩と背景画像を並行生成し、
+ * Firebase Storageに保存後、Firestoreにメタデータを保存する
+ * 
+ * @module GenerateAPI
+ * @requires NextResponse
+ * @requires openai
+ * @requires dalle
+ * @requires storage
+ * @requires firestore
+ */
+import { NextResponse } from 'next/server';
+import { generatePoem, generateImagePrompt } from '@/lib/openai.js';
+import { generateImage } from '@/lib/dalle.js';
+import { uploadImageToStorage } from '@/lib/storage.js';
+import { savePoemToFirestore } from '@/lib/firestore.js';
+import logger from '@/lib/logger.js';
+
+/**
+ * 詩と画像を並行生成するPOSTエンドポイント
+ * 
+ * @async
+ * @function POST
+ * @param {Request} request - Next.js リクエストオブジェクト
+ * @returns {Promise&lt;NextResponse>} 生成結果またはエラーレスポンス
+ * @throws {Error} OpenAI API呼び出し失敗時
+ * @throws {Error} Firebase操作失敗時
+ * @example
+ * // リクエスト例
+ * fetch('/api/generate', {
+ *   method: 'POST',
+ *   headers: { 'Content-Type': 'application/json' },
+ *   body: JSON.stringify({ theme: 'ざわざわした気分' })
+ * })
+ */
+export async function POST(request) {
+  const startTime = Date.now();
+  
+  try {
+    logger.info('詩生成API開始', { endpoint: '/api/generate' });
+    
+    // リクエストボディを取得
+    const { theme } = await request.json();
+    
+    // バリデーション
+    if (!theme || typeof theme !== 'string' || theme.trim().length === 0) {
+      logger.warn('無効なテーマ入力', { theme: theme || 'undefined' });
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'テーマを入力してください' 
+        },
+        { status: 400 }
+      );
+    }
+    
+    const cleanTheme = theme.trim();
+    logger.debug('処理パラメータ', { theme: cleanTheme, timestamp: new Date().toISOString() });
+    
+    // 並行処理：詩生成と画像プロンプト生成
+    logger.info('詩生成処理開始', { theme: cleanTheme });
+    const poemPromise = generatePoem(cleanTheme);
+    
+    // 詩生成完了を待つ
+    const poem = await poemPromise;
+    logger.info('詩生成完了', { 
+      poem: poem?.substring(0, 50) + '...', 
+      length: poem?.length 
+    });
+    
+    // 画像プロンプト生成と画像生成を順次実行
+    logger.info('画像プロンプト生成開始', { theme: cleanTheme });
+    const imagePrompt = await generateImagePrompt(cleanTheme, poem);
+    logger.info('画像プロンプト生成完了', { 
+      prompt: imagePrompt?.substring(0, 50) + '...'
+    });
+    
+    logger.info('DALL-E画像生成開始', { prompt: imagePrompt });
+    const dalleImageUrl = await generateImage(imagePrompt);
+    logger.info('DALL-E画像生成完了', { imageUrl: dalleImageUrl });
+    
+    // 仮のIDを生成（Firestoreで正式に確定される）
+    const tempId = Date.now().toString();
+    
+    // Firebase Storageに画像をアップロード
+    logger.info('Firebase Storageアップロード開始', { tempId, dalleImageUrl });
+    const firebaseImageUrl = await uploadImageToStorage(tempId, dalleImageUrl);
+    logger.info('Firebase Storageアップロード完了', { firebaseImageUrl, tempId });
+    
+    // Firestoreに詩データを保存
+    logger.info('Firestore保存開始', { theme: cleanTheme });
+    const poemId = await savePoemToFirestore({
+      theme: cleanTheme,
+      phrase: poem,
+      imageUrl: firebaseImageUrl,
+      imagePrompt: imagePrompt
+    });
+    logger.info('Firestore保存完了', { 
+      poemId, 
+      theme: cleanTheme,
+      duration: `${Date.now() - startTime}ms`
+    });
+    
+    // 成功レスポンス
+    const response = {
+      success: true,
+      data: {
+        id: poemId,
+        theme: cleanTheme,
+        phrase: poem,
+        imageUrl: firebaseImageUrl,
+        imagePrompt: imagePrompt
+      }
+    };
+    
+    logger.info('API処理完了', {
+      success: true,
+      poemId,
+      totalDuration: `${Date.now() - startTime}ms`
+    });
+    
+    return NextResponse.json(response);
+    
+  } catch (error) {
+    // エラータイプ別の詳細情報
+    let errorMessage = '詩の生成中にエラーが発生しました';
+    let errorType = 'unknown';
+    
+    if (error.message.includes('OpenAI')) {
+      errorMessage = 'AI生成サービスでエラーが発生しました';
+      errorType = 'openai_error';
+    } else if (error.message.includes('Firebase') || error.message.includes('Storage')) {
+      errorMessage = 'データ保存中にエラーが発生しました';
+      errorType = 'firebase_error';
+    } else if (error.message.includes('DALL-E') || error.message.includes('画像')) {
+      errorMessage = '画像生成中にエラーが発生しました';
+      errorType = 'dalle_error';
+    }
+    
+    logger.error('詩生成API失敗', {
+      error: error.message,
+      stack: error.stack,
+      errorType,
+      theme: cleanTheme || 'unknown',
+      duration: `${Date.now() - startTime}ms`
+    });
+    
+    return NextResponse.json(
+      {
+        success: false,
+        error: errorMessage,
+        details: {
+          type: errorType,
+          message: error.message
+        }
+      },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * API情報を返すGETエンドポイント
+ * 
+ * @async
+ * @function GET
+ * @returns {Promise&lt;NextResponse>} API情報と使用方法
+ * @example
+ * // GET /api/generate
+ * {
+ *   "message": "🌸 ゆるVibe Pages 詩生成API",
+ *   "usage": "POST /api/generate with { \"theme\": \"your_theme\" }",
+ *   "version": "1.0.0"
+ * }
+ */
+export async function GET() {
+  logger.debug('API情報リクエスト', { method: 'GET', endpoint: '/api/generate' });
+  
+  return NextResponse.json({
+    message: '🌸 ゆるVibe Pages 詩生成API',
+    usage: 'POST /api/generate with { "theme": "your_theme" }',
+    version: '1.0.0'
+  });
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-GenerateAPI.html">GenerateAPI</a></li><li><a href="module-Logger.html">Logger</a></li><li><a href="module-OpenAI.html">OpenAI</a></li></ul><h3>Global</h3><ul><li><a href="global.html#checkFirebaseImageExists">checkFirebaseImageExists</a></li><li><a href="global.html#cleanupObjectUrls">cleanupObjectUrls</a></li><li><a href="global.html#deleteImageFromStorage">deleteImageFromStorage</a></li><li><a href="global.html#generateDummyImagePrompt">generateDummyImagePrompt</a></li><li><a href="global.html#generateDummyPoem">generateDummyPoem</a></li><li><a href="global.html#generateDummyResponse">generateDummyResponse</a></li><li><a href="global.html#generateImage">generateImage</a></li><li><a href="global.html#generateImageFromTheme">generateImageFromTheme</a></li><li><a href="global.html#getDummyImageUrl">getDummyImageUrl</a></li><li><a href="global.html#getImageFallback">getImageFallback</a></li><li><a href="global.html#getPoemFromFirestore">getPoemFromFirestore</a></li><li><a href="global.html#loadFirebaseImageBlob">loadFirebaseImageBlob</a></li><li><a href="global.html#loadFirebaseImageUrl">loadFirebaseImageUrl</a></li><li><a href="global.html#loadPoemImage">loadPoemImage</a></li><li><a href="global.html#savePoemToFirestore">savePoemToFirestore</a></li><li><a href="global.html#uploadBase64ImageToStorage">uploadBase64ImageToStorage</a></li><li><a href="global.html#uploadImageToStorage">uploadImageToStorage</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Mon Jul 14 2025 15:36:26 GMT+0900 (日本標準時)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

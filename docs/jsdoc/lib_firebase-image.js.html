@@ -1,4 +1,32 @@
-// Firebase Storage 専用画像読み込みユーティリティ
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: lib/firebase-image.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: lib/firebase-image.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>// Firebase Storage 専用画像読み込みユーティリティ
 import { ref, getBlob, getDownloadURL } from 'firebase/storage';
 import { storage } from './firebase.js';
 
@@ -6,7 +34,7 @@ import { storage } from './firebase.js';
  * Firebase Storage から画像を直接ダウンロードしてObject URLを作成
  * CORSエラーを回避するためにgetBlob()を使用
  * @param {string} imageId - 画像ID（ファイル名から拡張子を除いたもの）
- * @returns {Promise<{success: boolean, objectUrl: (string|undefined), error: (string|undefined), method: string}>}
+ * @returns {Promise&lt;{success: boolean, objectUrl: (string|undefined), error: (string|undefined), method: string}>}
  */
 export async function loadFirebaseImageBlob(imageId) {
   try {
@@ -51,7 +79,7 @@ export async function loadFirebaseImageBlob(imageId) {
 /**
  * Firebase Storage から getDownloadURL を使用して画像URLを取得（フォールバック）
  * @param {string} imageId - 画像ID
- * @returns {Promise<{success: boolean, downloadUrl: (string|undefined), error: (string|undefined), method: string}>}
+ * @returns {Promise&lt;{success: boolean, downloadUrl: (string|undefined), error: (string|undefined), method: string}>}
  */
 export async function loadFirebaseImageUrl(imageId) {
   try {
@@ -95,7 +123,7 @@ export async function loadFirebaseImageUrl(imageId) {
 /**
  * 詩IDからFirebase Storage画像を読み込む統合関数
  * @param {string} poemId - 詩のID
- * @returns {Promise<{success: boolean, imageUrl: (string|undefined), objectUrl: (string|undefined), cleanup: (Function|undefined), method: string}>}
+ * @returns {Promise&lt;{success: boolean, imageUrl: (string|undefined), objectUrl: (string|undefined), cleanup: (Function|undefined), method: string}>}
  */
 export async function loadPoemImage(poemId) {
   const startTime = Date.now();
@@ -173,7 +201,7 @@ export function cleanupObjectUrls(objectUrls) {
   }
   
   objectUrls.forEach(url => {
-    if (url && typeof url === 'string' && url.startsWith('blob:')) {
+    if (url &amp;&amp; typeof url === 'string' &amp;&amp; url.startsWith('blob:')) {
       URL.revokeObjectURL(url);
       console.log('🧹 Object URL revoked:', url.substring(0, 50) + '...');
     }
@@ -183,7 +211,7 @@ export function cleanupObjectUrls(objectUrls) {
 /**
  * Firebase Storage画像の存在確認
  * @param {string} imageId - 画像ID
- * @returns {Promise<boolean>}
+ * @returns {Promise&lt;boolean>}
  */
 export async function checkFirebaseImageExists(imageId) {
   try {
@@ -198,3 +226,26 @@ export async function checkFirebaseImageExists(imageId) {
     return false;
   }
 }
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-GenerateAPI.html">GenerateAPI</a></li><li><a href="module-Logger.html">Logger</a></li><li><a href="module-OpenAI.html">OpenAI</a></li></ul><h3>Global</h3><ul><li><a href="global.html#checkFirebaseImageExists">checkFirebaseImageExists</a></li><li><a href="global.html#cleanupObjectUrls">cleanupObjectUrls</a></li><li><a href="global.html#deleteImageFromStorage">deleteImageFromStorage</a></li><li><a href="global.html#generateDummyImagePrompt">generateDummyImagePrompt</a></li><li><a href="global.html#generateDummyPoem">generateDummyPoem</a></li><li><a href="global.html#generateDummyResponse">generateDummyResponse</a></li><li><a href="global.html#generateImage">generateImage</a></li><li><a href="global.html#generateImageFromTheme">generateImageFromTheme</a></li><li><a href="global.html#getDummyImageUrl">getDummyImageUrl</a></li><li><a href="global.html#getImageFallback">getImageFallback</a></li><li><a href="global.html#getPoemFromFirestore">getPoemFromFirestore</a></li><li><a href="global.html#loadFirebaseImageBlob">loadFirebaseImageBlob</a></li><li><a href="global.html#loadFirebaseImageUrl">loadFirebaseImageUrl</a></li><li><a href="global.html#loadPoemImage">loadPoemImage</a></li><li><a href="global.html#savePoemToFirestore">savePoemToFirestore</a></li><li><a href="global.html#uploadBase64ImageToStorage">uploadBase64ImageToStorage</a></li><li><a href="global.html#uploadImageToStorage">uploadImageToStorage</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Mon Jul 14 2025 15:36:26 GMT+0900 (日本標準時)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

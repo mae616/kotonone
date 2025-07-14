@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: lib/storage.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: lib/storage.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>// Firebase Storage 画像アップロード関数
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { storage } from './firebase.js';
+
+/**
+ * DALL-E生成画像をFirebase Storageにアップロード
+ * @param {string} imageId - 画像識別ID（通常は詩のID）
+ * @param {string} imageUrl - DALL-Eから取得した画像URL
+ * @returns {Promise&lt;string>} - Firebase Storage上の画像URL
+ */
+export async function uploadImageToStorage(imageId, imageUrl) {
+  try {
+    console.log('画像ダウンロード開始:', imageUrl);
+    
+    // DALL-E画像をfetch
+    const response = await fetch(imageUrl);
+    if (!response.ok) {
+      throw new Error(`画像取得失敗: ${response.status}`);
+    }
+    
+    // Blobとして取得
+    const imageBlob = await response.blob();
+    console.log('画像サイズ:', imageBlob.size, 'bytes');
+    
+    // Storage参照を作成（ファイル名：{imageId}.png）
+    const fileName = `images/${imageId}.png`;
+    const storageRef = ref(storage, fileName);
+    
+    // メタデータを設定
+    const metadata = {
+      contentType: 'image/png',
+      customMetadata: {
+        'generated': 'dalle-3',
+        'uploadedAt': new Date().toISOString()
+      }
+    };
+    
+    console.log('Firebase Storageアップロード開始:', fileName);
+    
+    // アップロード実行
+    const snapshot = await uploadBytes(storageRef, imageBlob, metadata);
+    console.log('アップロード完了:', snapshot.metadata.fullPath);
+    
+    // ダウンロードURLを取得
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    console.log('Firebase Storage URL生成成功:', downloadURL);
+    
+    // URLの形式を確認（デバッグ用）
+    if (downloadURL.includes('firebasestorage.googleapis.com')) {
+      console.log('✅ 標準Firebase Storage URL形式');
+    } else {
+      console.warn('⚠️ 非標準URL形式:', downloadURL);
+    }
+    
+    return downloadURL;
+  } catch (error) {
+    console.error('Storage アップロードエラー:', error);
+    throw new Error('画像のアップロードに失敗しました');
+  }
+}
+
+/**
+ * Base64画像データをFirebase Storageにアップロード
+ * @param {string} imageId - 画像識別ID
+ * @param {string} base64Data - Base64エンコード画像データ
+ * @returns {Promise&lt;string>} - Firebase Storage上の画像URL
+ */
+export async function uploadBase64ImageToStorage(imageId, base64Data) {
+  try {
+    // Base64からBlobに変換
+    const base64Response = await fetch(base64Data);
+    const blob = await base64Response.blob();
+    
+    const fileName = `images/${imageId}.png`;
+    const storageRef = ref(storage, fileName);
+    
+    const metadata = {
+      contentType: 'image/png',
+      customMetadata: {
+        'generated': 'dalle-3',
+        'uploadedAt': new Date().toISOString()
+      }
+    };
+    
+    const snapshot = await uploadBytes(storageRef, blob, metadata);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    
+    console.log('Base64画像アップロード完了:', downloadURL);
+    return downloadURL;
+  } catch (error) {
+    console.error('Base64 アップロードエラー:', error);
+    throw new Error('Base64画像のアップロードに失敗しました');
+  }
+}
+
+/**
+ * Storage上の画像を削除
+ * @param {string} imageId - 画像識別ID
+ * @returns {Promise&lt;void>}
+ */
+export async function deleteImageFromStorage(imageId) {
+  try {
+    const fileName = `images/${imageId}.png`;
+    const storageRef = ref(storage, fileName);
+    
+    await deleteObject(storageRef);
+    console.log('画像削除完了:', fileName);
+  } catch (error) {
+    console.error('画像削除エラー:', error);
+    throw new Error('画像の削除に失敗しました');
+  }
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-GenerateAPI.html">GenerateAPI</a></li><li><a href="module-Logger.html">Logger</a></li><li><a href="module-OpenAI.html">OpenAI</a></li></ul><h3>Global</h3><ul><li><a href="global.html#checkFirebaseImageExists">checkFirebaseImageExists</a></li><li><a href="global.html#cleanupObjectUrls">cleanupObjectUrls</a></li><li><a href="global.html#deleteImageFromStorage">deleteImageFromStorage</a></li><li><a href="global.html#generateDummyImagePrompt">generateDummyImagePrompt</a></li><li><a href="global.html#generateDummyPoem">generateDummyPoem</a></li><li><a href="global.html#generateDummyResponse">generateDummyResponse</a></li><li><a href="global.html#generateImage">generateImage</a></li><li><a href="global.html#generateImageFromTheme">generateImageFromTheme</a></li><li><a href="global.html#getDummyImageUrl">getDummyImageUrl</a></li><li><a href="global.html#getImageFallback">getImageFallback</a></li><li><a href="global.html#getPoemFromFirestore">getPoemFromFirestore</a></li><li><a href="global.html#loadFirebaseImageBlob">loadFirebaseImageBlob</a></li><li><a href="global.html#loadFirebaseImageUrl">loadFirebaseImageUrl</a></li><li><a href="global.html#loadPoemImage">loadPoemImage</a></li><li><a href="global.html#savePoemToFirestore">savePoemToFirestore</a></li><li><a href="global.html#uploadBase64ImageToStorage">uploadBase64ImageToStorage</a></li><li><a href="global.html#uploadImageToStorage">uploadImageToStorage</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Mon Jul 14 2025 15:36:26 GMT+0900 (日本標準時)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
