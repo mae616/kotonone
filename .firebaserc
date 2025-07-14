@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "kotonone-app"
+  },
+  "targets": {
+    "kotonone-app": {
+      "hosting": {
+        "production": [
+          "kotonone-app"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

@@ -1,13 +1,14 @@
-import { getPoemFromFirestore } from '@/lib/firestore.js';
+import FunctionsClient from '@/lib/functions-client.js';
 import { notFound } from 'next/navigation';
 import FloatingParticles from '@/components/FloatingParticles.js';
 import BackgroundImage from '@/components/BackgroundImage.js';
+import logger from '@/lib/logger.js';
 
 // メタデータ生成（OGP対応）
 export async function generateMetadata({ params }) {
   try {
     const { id } = await params;
-    const poemData = await getPoemFromFirestore(id);
+    const poemData = await FunctionsClient.getPoem(id);
     
     if (!poemData) {
       return {
@@ -40,7 +41,7 @@ export async function generateMetadata({ params }) {
       }
     };
   } catch (error) {
-    console.error('メタデータ生成エラー:', error);
+    logger.error('メタデータ生成エラー', { error: error.message, stack: error.stack });
     return {
       title: 'ゆるVibe Pages',
       description: '詩と画像を生成するアプリ'
@@ -51,7 +52,7 @@ export async function generateMetadata({ params }) {
 export default async function ViewPoemPage({ params }) {
   try {
     const { id } = await params;
-    const poemData = await getPoemFromFirestore(id);
+    const poemData = await FunctionsClient.getPoem(id);
     
     if (!poemData) {
       notFound();
@@ -137,7 +138,7 @@ export default async function ViewPoemPage({ params }) {
       </div>
     );
   } catch (error) {
-    console.error('詩表示エラー:', error);
+    logger.error('詩表示エラー', { error: error.message, stack: error.stack });
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">

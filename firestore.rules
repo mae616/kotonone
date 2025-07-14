@@ -1,0 +1,18 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 詩コレクション - Cloud Functions経由でのみアクセス許可
+    match /poems/{poemId} {
+      // 読み取り専用を許可（Functions経由での書き込みは管理者権限で実行）
+      allow read: if true;
+      // 書き込みは Cloud Functions のみ（Admin SDK使用）
+      allow write: if false;
+    }
+    
+    // その他のコレクションは一切アクセス拒否
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

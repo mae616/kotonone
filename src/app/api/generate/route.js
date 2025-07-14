@@ -9,13 +9,13 @@
  * @requires openai
  * @requires dalle
  * @requires storage
- * @requires firestore
+ * @requires functions-client
  */
 import { NextResponse } from 'next/server';
 import { generatePoem, generateImagePrompt } from '@/lib/openai.js';
 import { generateImage } from '@/lib/dalle.js';
 import { uploadImageToStorage } from '@/lib/storage.js';
-import { savePoemToFirestore } from '@/lib/firestore.js';
+import FunctionsClient from '@/lib/functions-client.js';
 import logger from '@/lib/logger.js';
 
 /**
@@ -89,15 +89,15 @@ export async function POST(request) {
     const firebaseImageUrl = await uploadImageToStorage(tempId, dalleImageUrl);
     logger.info('Firebase Storageアップロード完了', { firebaseImageUrl, tempId });
     
-    // Firestoreに詩データを保存
-    logger.info('Firestore保存開始', { theme: cleanTheme });
-    const poemId = await savePoemToFirestore({
+    // Firebase Functions経由で詩データを保存
+    logger.info('Functions詩保存開始', { theme: cleanTheme });
+    const poemId = await FunctionsClient.savePoem({
       theme: cleanTheme,
       phrase: poem,
       imageUrl: firebaseImageUrl,
       imagePrompt: imagePrompt
     });
-    logger.info('Firestore保存完了', { 
+    logger.info('Functions詩保存完了', { 
       poemId, 
       theme: cleanTheme,
       duration: `${Date.now() - startTime}ms`
